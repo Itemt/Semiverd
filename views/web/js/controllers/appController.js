@@ -204,10 +204,20 @@ export class AppController {
       return;
     }
 
-    this.loginView.mostrarMensaje('Verificando identidad...', '');
+    const esNuevo = correo && !this.model.usuario;
+    this.loginView.mostrarMensaje(
+      correo
+        ? '🌱 Registrando y vinculando tu rostro...'
+        : '🔍 Buscando tu identidad biométrica...',
+      ''
+    );
     try {
-      await this.model.loginFacial(correo, this.model.fotoCapturada);
-      this.mainView.toast('¡Identidad verificada! Bienvenido guardián 🌿', 'exito');
+      const respuesta = await this.model.loginFacial(correo, this.model.fotoCapturada);
+      const nombreGuardian = respuesta?.usuario?.apodo || respuesta?.usuario?.nombre || 'Guardián';
+      const mensaje = correo
+        ? `✅ ¡Rostro vinculado! Bienvenido, ${nombreGuardian} 🌿`
+        : `🎉 ¡Identidad verificada! Bienvenido de nuevo, ${nombreGuardian} 🌿`;
+      this.mainView.toast(mensaje, 'exito');
       this.entrarApp();
     } catch (err) {
       this.loginView.mostrarMensaje(err.message || 'Error en el reconocimiento facial. Intenta de nuevo.', 'error');

@@ -58,7 +58,8 @@ class LoginRequest(BaseModel):
 class LoginFacialRequest(BaseModel):
     """Login con foto capturada. La imagen llega como base64"""
     imagen_base64: str = Field(..., description="Foto capturada en base64")
-    correo: Optional[str] = None  # Para MVP: correo de referencia
+    correo: Optional[str] = None      # Correo del usuario para vincular/registrar
+    nombre: Optional[str] = None      # Nombre para auto-registrar si no existe
 
 
 class TokenRespuesta(BaseModel):

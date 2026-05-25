@@ -186,24 +186,36 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 @router.post("/login-facial", response_model=TokenRespuesta)
 def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
     """
-    Login facial real (Face ID).
-    - Si se envía 'correo', vincula el rostro capturado a ese usuario.
-    - Si no se envía 'correo', realiza una búsqueda biométrica en la base de datos
-      comparando la foto con todos los rostros registrados.
+    Login / Registro facial real (Face ID).
+    - Si se envía 'correo' y el usuario EXISTE: vincula el rostro a su cuenta.
+    - Si se envía 'correo' y el usuario NO EXISTE: lo registra automáticamente
+      con el rostro capturado (no necesita contraseña).
+    - Si no se envía 'correo': realiza búsqueda biométrica directa en la BD.
     """
     # 1. Extraer el encoding del rostro enviado
     encoding_login = obtener_encoding_facial(datos.imagen_base64)
 
-    # Caso 1: Registro/Vinculación inicial (se provee correo)
+    # Caso 1: Se provee correo → Vincular o auto-registrar
     if datos.correo:
         usuario = db.query(Usuario).filter(Usuario.correo == datos.correo).first()
-        if not usuario:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No se encontró un guardián con ese correo para vincular el rostro"
-            )
 
-        # Serializar y almacenar el encoding
+        # Si no existe, auto-registrar con los datos proporcionados
+        if not usuario:
+            nombre_usuario = datos.nombre or datos.correo.split("@")[0].capitalize()
+            # Generar una contraseña aleatoria segura (el usuario usará Face ID)
+            import secrets
+            password_temporal = secrets.token_urlsafe(24)
+            usuario = Usuario(
+                nombre=nombre_usuario,
+                correo=datos.correo,
+                apodo=nombre_usuario,
+                hashed_password=hashear_password(password_temporal),
+                activo=True
+            )
+            db.add(usuario)
+            db.flush()  # Para obtener el ID antes del commit
+
+        # Serializar y almacenar el encoding facial
         usuario.face_encoding = json.dumps(encoding_login.tolist())
         # Almacenar la foto de perfil en miniatura
         usuario.foto_perfil = datos.imagen_base64
