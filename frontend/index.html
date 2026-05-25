@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="description" content="Semiverd - La app gamificada de las Cuatro Semillas Verdes. Aprende sobre el cuidado del medio ambiente completando misiones ecológicas en Barrancabermeja." />
+  <meta name="theme-color" content="#1a3a2a" />
+  <title>🌱 Semiverd - Las Cuatro Semillas Verdes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- PANTALLA DE CARGA (Splash Screen)                  -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-tree">🌳</div>
+      <h1 class="splash-title">Semiverd</h1>
+      <p class="splash-subtitle">Las Cuatro Semillas Verdes</p>
+      <div class="splash-loader">
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- PANTALLA: LOGIN / REGISTRO                         -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <section id="pantalla-login" class="pantalla oculta">
+    <div class="login-background">
+      <div class="particles" id="particles-login"></div>
+    </div>
+
+    <div class="login-container">
+      <!-- Logo -->
+      <div class="login-hero">
+        <div class="login-tree-icon">🌱</div>
+        <h1 class="login-titulo">Semiverd</h1>
+        <p class="login-desc">Las Cuatro Semillas Verdes de Barrancabermeja</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <button class="tab-btn activo" id="tab-facial" onclick="mostrarTab('facial')">
+          📷 Acceso Facial
+        </button>
+        <button class="tab-btn" id="tab-correo" onclick="mostrarTab('correo')">
+          📧 Con Correo
+        </button>
+        <button class="tab-btn" id="tab-registro" onclick="mostrarTab('registro')">
+          🌱 Registrarse
+        </button>
+      </div>
+
+      <!-- TAB: Login Facial -->
+      <div id="tab-content-facial" class="tab-content activo">
+        <div class="camera-container">
+          <div class="camera-frame" id="camera-frame">
+            <video id="camara-video" autoplay playsinline muted></video>
+            <canvas id="camara-canvas" style="display:none;"></canvas>
+            <div class="camera-overlay">
+              <div class="face-guide"></div>
+            </div>
+            <div id="camera-placeholder" class="camera-placeholder">
+              <span>📷</span>
+              <p>Activa la cámara para identificarte</p>
+            </div>
+          </div>
+
+          <div class="camera-controls">
+            <button class="btn-camara" id="btn-activar-camara" onclick="activarCamara()">
+              🎥 Activar Cámara
+            </button>
+            <button class="btn-capturar oculto" id="btn-capturar" onclick="capturarFoto()">
+              📸 Capturar Foto
+            </button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="facial-correo">Tu correo (para este MVP)</label>
+          <input type="email" id="facial-correo" placeholder="guardián@semiverd.com" autocomplete="email" />
+        </div>
+
+        <button class="btn-primary" id="btn-login-facial" onclick="loginFacial()" disabled>
+          🌿 Entrar como Guardián
+        </button>
+      </div>
+
+      <!-- TAB: Login con correo -->
+      <div id="tab-content-correo" class="tab-content oculta">
+        <div class="input-group">
+          <label for="login-correo">Correo</label>
+          <input type="email" id="login-correo" placeholder="guardián@semiverd.com" autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button class="btn-primary" onclick="loginCorreo()">
+          🌿 Ingresar
+        </button>
+      </div>
+
+      <!-- TAB: Registro -->
+      <div id="tab-content-registro" class="tab-content oculta">
+        <div class="input-group">
+          <label for="reg-nombre">Tu nombre</label>
+          <input type="text" id="reg-nombre" placeholder="Ej: Juliana" autocomplete="given-name" />
+        </div>
+        <div class="input-group">
+          <label for="reg-apodo">Nombre de Guardián</label>
+          <input type="text" id="reg-apodo" placeholder="Ej: La Guardiana del Agua" />
+        </div>
+        <div class="input-group">
+          <label for="reg-correo">Correo</label>
+          <input type="email" id="reg-correo" placeholder="guardián@semiverd.com" autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <label for="reg-password">Contraseña (mín. 6 caracteres)</label>
+          <input type="password" id="reg-password" placeholder="••••••••" autocomplete="new-password" />
+        </div>
+        <button class="btn-primary" onclick="registrarUsuario()">
+          🌱 Unirme a las Semillas Verdes
+        </button>
+      </div>
+
+      <!-- Mensaje de estado -->
+      <div id="login-mensaje" class="mensaje oculto"></div>
+
+      <!-- Modo demo -->
+      <button class="btn-demo" onclick="loginDemo()">
+        🎮 Ver Demo (sin cuenta)
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- PANTALLA: APLICACIÓN PRINCIPAL                     -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <section id="pantalla-app" class="pantalla oculta">
+
+    <!-- BARRA SUPERIOR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" onclick="toggleSidebar()" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="topbar-logo">🌱 Semiverd</span>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-stat" title="Puntos totales">
+          <span class="stat-icon">⭐</span>
+          <span id="header-puntos">0</span>
+        </div>
+        <div class="topbar-stat" title="Monedas verdes">
+          <span class="stat-icon">🪙</span>
+          <span id="header-monedas">0</span>
+        </div>
+        <button class="topbar-theme-btn" id="btn-toggle-tema" onclick="toggleTema()" aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
+          🌙
+        </button>
+        <button class="topbar-avatar" onclick="irA('perfil')" aria-label="Perfil">
+          <span id="header-avatar">🌿</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-avatar">🌿</div>
+        <div class="sidebar-info">
+          <p class="sidebar-nombre" id="sidebar-nombre">Guardián</p>
+          <p class="sidebar-nivel" id="sidebar-nivel">Semilla</p>
+        </div>
+      </div>
+      <ul class="sidebar-menu">
+        <li><button onclick="irA('inicio')" class="sidebar-item activo" id="nav-inicio">🏠 Inicio</button></li>
+        <li><button onclick="irA('arbol')" class="sidebar-item" id="nav-arbol">🌳 Mi Árbol</button></li>
+        <li><button onclick="irA('camino')" class="sidebar-item" id="nav-camino">🗺️ El Camino</button></li>
+        <li><button onclick="irA('misiones')" class="sidebar-item" id="nav-misiones">⚔️ Misiones</button></li>
+        <li><button onclick="irA('academia')" class="sidebar-item" id="nav-academia">🎓 Academia</button></li>
+        <li><button onclick="irA('ranking')" class="sidebar-item" id="nav-ranking">🏆 Ranking</button></li>
+        <li><button onclick="irA('perfil')" class="sidebar-item" id="nav-perfil">👤 Mi Perfil</button></li>
+      </ul>
+      <button class="sidebar-logout" onclick="cerrarSesion()">← Salir</button>
+    </nav>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+
+      <!-- ─── VISTA: INICIO ─────────────────────────────── -->
+      <div id="vista-inicio" class="vista activa">
+        <div class="vista-header gradient-verde">
+          <h2>¡Hola, <span id="bienvenida-nombre">Guardián</span>! 👋</h2>
+          <p>Barrancabermeja te necesita. <br>¡Sigue plantando cambios!</p>
+        </div>
+
+        <!-- Mini árbol y progreso -->
+        <div class="card card-arbol-mini">
+          <div class="arbol-mini-container">
+            <canvas id="arbol-mini-canvas" width="120" height="140"></canvas>
+          </div>
+          <div class="arbol-mini-info">
+            <h3>Tu Árbol Semiverd</h3>
+            <p id="arbol-nivel-texto">Nivel 1 - Semilla</p>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="arbol-progress-bar" style="width:5%"></div>
+            </div>
+            <p class="progress-label" id="arbol-progress-label">0 / 100 puntos</p>
+            <button class="btn-secondary" onclick="irA('arbol')">Ver mi árbol completo 🌳</button>
+          </div>
+        </div>
+
+        <!-- Tip del día -->
+        <div class="card card-tip-dia">
+          <div class="tip-dia-header">
+            <span id="tip-dia-icono">💡</span>
+            <h3>Consejo del Día</h3>
+            <span class="tip-guardian" id="tip-dia-guardian"></span>
+          </div>
+          <p class="tip-dia-titulo" id="tip-dia-titulo">Cargando consejo...</p>
+          <p class="tip-dia-contenido" id="tip-dia-contenido"></p>
+          <button class="btn-link" onclick="irA('academia')">Ver más consejos →</button>
+        </div>
+
+        <!-- Acceso rápido a misiones -->
+        <div class="seccion-titulo">
+          <h3>⚔️ Misiones Disponibles</h3>
+          <button class="btn-link" onclick="irA('misiones')">Ver todas →</button>
+        </div>
+        <div id="misiones-inicio" class="misiones-grid-inicio">
+          <div class="mision-card-skeleton"></div>
+          <div class="mision-card-skeleton"></div>
+        </div>
+      </div>
+
+      <!-- ─── VISTA: MI ÁRBOL ───────────────────────────── -->
+      <div id="vista-arbol" class="vista">
+        <div class="vista-header gradient-bosque">
+          <h2>🌳 Tu Árbol Semiverd</h2>
+          <p>Cada misión lo hace crecer más fuerte</p>
+        </div>
+
+        <div class="arbol-container">
+          <canvas id="arbol-canvas" width="320" height="400"></canvas>
+          <div class="arbol-info-panel">
+            <div class="arbol-nivel-badge" id="arbol-nivel-badge">Nivel 1</div>
+            <h3 id="arbol-titulo-nivel">🌱 Semilla</h3>
+            <p id="arbol-descripcion">Tu árbol da sus primeros pasos. ¡Completa misiones para hacerlo crecer!</p>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-num" id="stat-puntos">0</span>
+                <span class="stat-label">Puntos</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="stat-misiones">0</span>
+                <span class="stat-label">Misiones</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="stat-monedas">0</span>
+                <span class="stat-label">🪙 Verdes</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-num" id="stat-racha">0</span>
+                <span class="stat-label">🔥 Racha</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recompensas / Medallas -->
+        <div class="seccion-titulo">
+          <h3>🏅 Mis Medallas</h3>
+        </div>
+        <div id="medallas-container" class="medallas-grid">
+          <p class="empty-state">Completa misiones para ganar medallas 🌱</p>
+        </div>
+      </div>
+
+      <!-- ─── VISTA: EL CAMINO (Mapa de Niveles) ───────── -->
+      <div id="vista-camino" class="vista">
+        <div class="vista-header gradient-tierra">
+          <h2>🗺️ El Camino Verde</h2>
+          <p>Tu sendero de guardián en Barrancabermeja</p>
+        </div>
+        <div class="mapa-container">
+          <div id="mapa-camino" class="mapa-camino">
+            <!-- Se genera dinámicamente en JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── VISTA: MISIONES ───────────────────────────── -->
+      <div id="vista-misiones" class="vista">
+        <div class="vista-header gradient-selva">
+          <h2>⚔️ Misiones</h2>
+          <p>Las Cuatro Semillas Verdes te esperan</p>
+        </div>
+        <div id="misiones-lista" class="misiones-lista">
+          <div class="mision-card-skeleton"></div>
+          <div class="mision-card-skeleton"></div>
+          <div class="mision-card-skeleton"></div>
+          <div class="mision-card-skeleton"></div>
+        </div>
+      </div>
+
+      <!-- ─── MODAL: DETALLE DE MISIÓN ─────────────────── -->
+      <div id="modal-mision" class="modal oculto">
+        <div class="modal-backdrop" onclick="cerrarModalMision()"></div>
+        <div class="modal-content">
+          <button class="modal-cerrar" onclick="cerrarModalMision()">✕</button>
+          <div class="modal-icono" id="modal-mision-icono">🌱</div>
+          <h2 class="modal-titulo" id="modal-mision-titulo"></h2>
+          <div class="modal-zona-badge" id="modal-mision-zona"></div>
+          <p class="modal-guardianes" id="modal-mision-guardianes"></p>
+          <p class="modal-descripcion" id="modal-mision-descripcion"></p>
+          <div class="modal-recompensas">
+            <div class="recompensa-item">
+              <span>⭐</span>
+              <span id="modal-puntos"></span> puntos
+            </div>
+            <div class="recompensa-item">
+              <span>🪙</span>
+              <span id="modal-monedas"></span> monedas
+            </div>
+          </div>
+          <div class="modal-progreso-container" id="modal-progreso-container">
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="modal-progress-bar" style="width:0%"></div>
+            </div>
+            <p id="modal-estado-texto"></p>
+          </div>
+          <div class="modal-acciones" id="modal-acciones">
+            <!-- Botones dinámicos -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── VISTA: ACADEMIA DE GUARDIANES ────────────── -->
+      <div id="vista-academia" class="vista">
+        <div class="vista-header gradient-agua">
+          <h2>🎓 Academia de Guardianes</h2>
+          <p>Consejos para tu plantita y el planeta</p>
+        </div>
+
+        <!-- Filtros por categoría -->
+        <div class="filtros-categoria">
+          <button class="filtro-btn activo" onclick="filtrarTips(null, this)">Todos</button>
+          <button class="filtro-btn" onclick="filtrarTips('jardinería', this)">🌿 Jardín</button>
+          <button class="filtro-btn" onclick="filtrarTips('agua', this)">💧 Agua</button>
+          <button class="filtro-btn" onclick="filtrarTips('energia', this)">⚡ Energía</button>
+          <button class="filtro-btn" onclick="filtrarTips('reciclaje', this)">♻️ Reciclaje</button>
+        </div>
+
+        <div id="tips-lista" class="tips-grid">
+          <div class="tip-card-skeleton"></div>
+          <div class="tip-card-skeleton"></div>
+          <div class="tip-card-skeleton"></div>
+          <div class="tip-card-skeleton"></div>
+        </div>
+      </div>
+
+      <!-- ─── VISTA: RANKING ────────────────────────────── -->
+      <div id="vista-ranking" class="vista">
+        <div class="vista-header gradient-dorado">
+          <h2>🏆 Guardianes del Planeta</h2>
+          <p>Los mejores defensores de Barrancabermeja</p>
+        </div>
+        <div id="ranking-lista" class="ranking-lista">
+          <div class="mision-card-skeleton"></div>
+          <div class="mision-card-skeleton"></div>
+          <div class="mision-card-skeleton"></div>
+        </div>
+      </div>
+
+      <!-- ─── VISTA: PERFIL ─────────────────────────────── -->
+      <div id="vista-perfil" class="vista">
+        <div class="vista-header gradient-purpura">
+          <h2>👤 Mi Perfil</h2>
+          <p>Tu historia como guardián</p>
+        </div>
+        <div class="perfil-card">
+          <div class="perfil-avatar">🌿</div>
+          <h3 id="perfil-nombre">Cargando...</h3>
+          <p class="perfil-nivel" id="perfil-nivel">Semilla</p>
+          <p class="perfil-correo" id="perfil-correo"></p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-num" id="perfil-puntos">0</span>
+              <span class="stat-label">⭐ Puntos</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num" id="perfil-misiones-completadas">0</span>
+              <span class="stat-label">✅ Misiones</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num" id="perfil-nivel-arbol">1</span>
+              <span class="stat-label">🌳 Nivel Árbol</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num" id="perfil-monedas">0</span>
+              <span class="stat-label">🪙 Monedas</span>
+            </div>
+          </div>
+          <button class="btn-danger" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- BARRA NAV INFERIOR (móvil) -->
+    <nav class="bottom-nav">
+      <button class="bottom-nav-item activo" id="bnav-inicio" onclick="irA('inicio')">
+        <span class="bnav-icon">🏠</span>
+        <span class="bnav-label">Inicio</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-arbol" onclick="irA('arbol')">
+        <span class="bnav-icon">🌳</span>
+        <span class="bnav-label">Árbol</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-misiones" onclick="irA('misiones')">
+        <span class="bnav-icon">⚔️</span>
+        <span class="bnav-label">Misiones</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-academia" onclick="irA('academia')">
+        <span class="bnav-icon">🎓</span>
+        <span class="bnav-label">Academy</span>
+      </button>
+      <button class="bottom-nav-item" id="bnav-perfil" onclick="irA('perfil')">
+        <span class="bnav-icon">👤</span>
+        <span class="bnav-label">Perfil</span>
+      </button>
+    </nav>
+
+  </section>
+
+  <!-- Toast de notificaciones -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Script principal -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

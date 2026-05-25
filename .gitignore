@@ -1,0 +1,27 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Python virtual environment and caches
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment configurations and secrets
+.env
+.env.local
+.env.*.local
+
+# IDE configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
