@@ -7,6 +7,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 
 from models.database import engine
@@ -75,6 +76,12 @@ def raiz():
 def verificar_salud():
     """Health check del servidor"""
     return {"estado": "saludable", "servicio": "semiverd-api"}
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def obtener_favicon():
+    """Retorna el favicon oficial para evitar errores 404 del navegador"""
+    return FileResponse("views/web/favicon.png")
 
 
 # Montar carpeta de fotos de personajes
