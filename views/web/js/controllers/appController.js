@@ -88,7 +88,9 @@ export class AppController {
     this.mainView.overlay.addEventListener('click', () => this.mainView.cerrarSidebar());
     
     // Tema claro/oscuro
-    this.mainView.btnToggleTema.addEventListener('click', () => this.toggleTema());
+    this.mainView.btnToggleTemas.forEach(btn => {
+      btn.addEventListener('click', () => this.toggleTema());
+    });
 
     // Cerrar sesión
     document.querySelector('.sidebar-logout').addEventListener('click', () => this.cerrarSesion());

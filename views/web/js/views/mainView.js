@@ -9,7 +9,7 @@ export class MainView {
     this.sidebar = document.getElementById('sidebar');
     this.overlay = document.getElementById('sidebar-overlay');
     this.toastContainer = document.getElementById('toast-container');
-    this.btnToggleTema = document.getElementById('btn-toggle-tema');
+    this.btnToggleTemas = document.querySelectorAll('.btn-toggle-tema');
     
     // Vistas principales
     this.pantallaLogin = document.getElementById('pantalla-login');
@@ -39,9 +39,9 @@ export class MainView {
 
   aplicarTema(tema) {
     document.documentElement.setAttribute('data-theme', tema);
-    if (this.btnToggleTema) {
-      this.btnToggleTema.textContent = tema === 'dark' ? '☀️' : '🌙';
-    }
+    this.btnToggleTemas.forEach(btn => {
+      btn.textContent = tema === 'dark' ? '☀️' : '🌙';
+    });
   }
 
   toast(mensaje, tipo = 'exito') {

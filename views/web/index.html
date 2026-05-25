@@ -35,6 +35,11 @@
       <div class="particles" id="particles-login"></div>
     </div>
 
+    <!-- Botón de tema flotante para la pantalla de login -->
+    <button class="login-theme-btn btn-toggle-tema" id="btn-toggle-tema-login" aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
+      🌙
+    </button>
+
     <div class="login-container">
       <!-- Logo -->
       <div class="login-hero">
@@ -161,7 +166,7 @@
           <span class="stat-icon">🪙</span>
           <span id="header-monedas">0</span>
         </div>
-        <button class="topbar-theme-btn" id="btn-toggle-tema" onclick="toggleTema()" aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
+        <button class="topbar-theme-btn btn-toggle-tema" id="btn-toggle-tema" aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
           🌙
         </button>
         <button class="topbar-avatar" onclick="irA('perfil')" aria-label="Perfil">
@@ -188,7 +193,12 @@
         <li><button onclick="irA('ranking')" class="sidebar-item" id="nav-ranking">🏆 Ranking</button></li>
         <li><button onclick="irA('perfil')" class="sidebar-item" id="nav-perfil">👤 Mi Perfil</button></li>
       </ul>
-      <button class="sidebar-logout" onclick="cerrarSesion()">← Salir</button>
+      <div class="sidebar-footer">
+        <button class="sidebar-theme-btn btn-toggle-tema" id="btn-toggle-tema-sidebar" aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
+          🌙
+        </button>
+        <button class="sidebar-logout" onclick="cerrarSesion()">← Salir</button>
+      </div>
     </nav>
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
