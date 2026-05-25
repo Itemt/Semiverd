@@ -41,6 +41,17 @@ export class AppController {
       this.mainView.mostrarPantalla('login');
       this.loginView.mostrarTab('facial');
     }
+
+    // 6. Ocultar y remover el Splash Screen tras 2.5 segundos
+    setTimeout(() => {
+      const splash = document.getElementById('splash-screen');
+      if (splash) {
+        splash.classList.add('fadeout');
+        setTimeout(() => {
+          splash.remove();
+        }, 600);
+      }
+    }, 2500);
   }
 
   vincularEventos() {
