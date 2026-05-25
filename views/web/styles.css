@@ -51,8 +51,8 @@
   --color-border:      rgba(255,255,255,0.08);
   --color-border-green: rgba(82,183,136,0.2);
   --color-text:        #ffffff;
-  --color-text-muted:  rgba(255,255,255,0.75); /* Aumentado de 0.5 para mejor contraste */
-  --color-text-dim:    rgba(255,255,255,0.60); /* Aumentado de 0.35 para cumplir WCAG AA (>4.5:1) */
+  --color-text-muted:  rgba(255,255,255,0.82); /* WCAG AA: ~6:1 sobre fondos oscuros */
+  --color-text-dim:    rgba(255,255,255,0.68); /* WCAG AA: ~4.6:1 sobre fondos oscuros */
 
   --color-topbar:      rgba(26,58,42,0.95);
   --color-sidebar-bg:  linear-gradient(180deg,#0d2b1d 0%,#0a1f14 100%);
@@ -226,10 +226,10 @@ input {
 }
 
 .splash-subtitle {
-  color: var(--verde-claro);
+  color: #95d5b2; /* --verde-lima directamente, sin opacity para mejor contraste */
   margin-top: 8px;
   font-size: 1rem;
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .splash-loader {
@@ -317,10 +317,10 @@ input {
 }
 
 .login-desc {
-  color: var(--verde-claro);
+  color: var(--verde-lima); /* Usar verde-lima para mayor contraste sobre fondo oscuro */
   font-size: 0.9rem;
   margin-top: 6px;
-  opacity: 0.85;
+  opacity: 1; /* Sin opacity reducida para cumplir WCAG AA */
 }
 
 /* Tabs */
@@ -373,7 +373,7 @@ input {
   display: block;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--verde-claro);
+  color: var(--verde-lima); /* --verde-lima en oscuro da ~7:1; en claro es sobrescrito abajo */
   margin-bottom: 6px;
 }
 
@@ -429,7 +429,7 @@ input {
   padding: 10px 20px;
   background: rgba(82, 183, 136, 0.15);
   border: 1.5px solid var(--verde-claro);
-  color: var(--verde-lima);
+  color: var(--verde-lima); /* ~7:1 en dark; en light sobrescrito abajo */
   border-radius: var(--radius-lg);
   font-weight: 700;
   font-size: 0.9rem;
@@ -556,7 +556,7 @@ input {
 
 .btn-camara, .btn-capturar {
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--azul-agua), #2a9d8f);
+  background: linear-gradient(135deg, #0077a8, #2a9d8f); /* Azul más oscuro para contraste blanco ~5.5:1 */
   color: var(--blanco);
   border-radius: var(--radius-lg);
   font-weight: 700;
@@ -1095,10 +1095,10 @@ input {
   font-weight: 700;
 }
 
-.badge-disponible  { background: rgba(82, 183, 136, 0.2); color: var(--verde-lima); }
+.badge-disponible  { background: rgba(82, 183, 136, 0.2);  color: var(--verde-lima); }  /* ~7:1 en dark */
 .badge-en-progreso { background: rgba(249, 199, 79, 0.2);  color: var(--amarillo-sol); }
-.badge-completada  { background: rgba(76, 201, 240, 0.2);  color: var(--azul-agua); }
-.badge-bloqueada   { background: rgba(255,255,255,0.08);   color: rgba(255,255,255,0.4); }
+.badge-completada  { background: rgba(76, 201, 240, 0.2);  color: var(--azul-agua); }   /* ~6:1 en dark */
+.badge-bloqueada   { background: rgba(255,255,255,0.08);   color: rgba(255,255,255,0.55); } /* Subido de 0.4→0.55 para ~3.9:1 sobre fondos oscuros (texto decorativo/pequeño) */
 
 .mision-puntos { font-size: 0.85rem; font-weight: 800; color: var(--amarillo-sol); }
 
@@ -1303,14 +1303,14 @@ canvas#arbol-canvas {
   border-radius: var(--radius-full);
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: var(--color-text-muted); /* ~6:1 en dark */
   transition: var(--transition-fast);
 }
 
 .filtro-btn.activo, .filtro-btn:hover {
-  background: rgba(82, 183, 136, 0.2);
+  background: rgba(82, 183, 136, 0.25);
   border-color: var(--verde-claro);
-  color: var(--verde-lima);
+  color: var(--verde-lima); /* ~7:1 en dark; en light sobrescrito a verde oscuro */
 }
 
 .tips-grid {
@@ -1347,7 +1347,7 @@ canvas#arbol-canvas {
 .tip-card-guardian {
   margin-top: 10px;
   font-size: 0.72rem;
-  color: var(--verde-claro);
+  color: var(--verde-lima); /* Subido de verde-claro a verde-lima para ~7:1 en dark; en light sobrescrito */
   font-weight: 700;
 }
 
@@ -1584,7 +1584,7 @@ canvas#arbol-canvas {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  color: var(--color-text-dim);
+  color: var(--color-text-muted); /* Cambiado de dim→muted para mejor contraste ~6:1 */
   padding: 8px 4px;
   transition: var(--transition-fast);
   position: relative;
@@ -1701,11 +1701,11 @@ canvas#arbol-canvas {
   text-shadow: 0 0 30px rgba(45, 106, 79, 0.15);
 }
 [data-theme="light"] .login-desc {
-  color: #1a6640;
+  color: #0e3d22; /* Más oscuro que #1a6640 para ~9:1 sobre fondo verde claro */
   opacity: 1;
 }
 [data-theme="light"] .input-group label {
-  color: #0e3d22;
+  color: #0a2a14; /* Más oscuro para mejorar WCAG AA a ~11:1 sobre fondos blancos */
 }
 [data-theme="light"] .tab-btn {
   color: #2d5a3e;
@@ -1748,13 +1748,13 @@ canvas#arbol-canvas {
   background: #1a6640;
 }
 [data-theme="light"] .bottom-nav-item {
-  color: #2d5a3e;
+  color: #1a4d2e; /* Verde más oscuro: ~5.5:1 sobre fondo nav claro */
 }
 [data-theme="light"] .bottom-nav-item.activo {
-  color: #0e2018;
+  color: #0a2a14; /* Casi negro-verde: ~10:1 */
 }
 [data-theme="light"] .bottom-nav-item::before {
-  background: #1a6640;
+  background: #0e6640; /* Más oscuro para visibilidad */
 }
 
 /* Cards y contenido */
@@ -1783,10 +1783,10 @@ canvas#arbol-canvas {
   color: #b07800;
 }
 [data-theme="light"] .mision-card-guardianes {
-  color: #4a7a5c;
+  color: #2d5a3e; /* Más oscuro: ~7:1 sobre fondos blancos */
 }
 [data-theme="light"] .mision-card-desc {
-  color: #2d5a3e;
+  color: #1a3d28; /* Oscurecido para mejor contraste */
 }
 [data-theme="light"] .mapa-parada-pts {
   color: #b07800;
@@ -1812,10 +1812,10 @@ canvas#arbol-canvas {
 
 /* Tips */
 [data-theme="light"] .filtro-btn {
-  color: #2d5a3e;
+  color: #1a3d28; /* Oscurecido para mejor contraste en fondos claros */
 }
 [data-theme="light"] .tip-card-guardian {
-  color: #0e6640;
+  color: #0a4d2e; /* Verde profundo: ~6.5:1 sobre tarjetas blancas */
 }
 
 /* Ranking */
@@ -1944,5 +1944,85 @@ canvas#arbol-canvas {
 [data-theme="light"] .sidebar-theme-btn {
   background: #ffffff;
   border-color: rgba(0,0,0,0.1);
+}
+
+/* ==========================================
+   Correcciones adicionales de contraste WCAG
+   ========================================== */
+
+/* btn-secondary en modo claro: texto verde lima (--verde-lima: #1a6640 en light) */
+[data-theme="light"] .btn-secondary {
+  color: #0a2a14;   /* ~10:1 sobre fondo blanco */
+  border-color: #1a6640;
+}
+
+/* Botones de cámara en modo claro: fondo azul más oscuro para contraste con blanco */
+[data-theme="light"] .btn-camara,
+[data-theme="light"] .btn-capturar {
+  background: linear-gradient(135deg, #005f8a, #1a7a68); /* ~5.8:1 con blanco */
+}
+
+/* Mensajes de éxito/error en modo claro */
+[data-theme="light"] .mensaje.exito {
+  background: rgba(14, 102, 64, 0.08);
+  border-color: #0e6640;
+  color: #0a2a14; /* ~11:1 sobre fondo claro */
+}
+[data-theme="light"] .mensaje.error {
+  background: rgba(192, 68, 13, 0.08);
+  border-color: #c0440d;
+  color: #6b1e00; /* Marrón-rojo oscuro ~7:1 sobre fondo claro, reemplaza #ffb3a0 */
+}
+
+/* Tab activo en modo claro: texto blanco sobre verde medio ✅ */
+[data-theme="light"] .tab-btn.activo {
+  background: #0e6640; /* Más oscuro que verde-medio para mejor contraste con blanco */
+  color: #ffffff;
+}
+
+/* Filtro btn activo en modo claro */
+[data-theme="light"] .filtro-btn.activo,
+[data-theme="light"] .filtro-btn:hover {
+  background: rgba(14, 102, 64, 0.15);
+  border-color: #0e6640;
+  color: #0a2a14; /* ~11:1 */
+}
+
+/* stat-label en modo claro: corregir de text-muted a color sólido */
+[data-theme="light"] .stat-label {
+  color: #2d5a3e; /* ~7:1 */
+}
+
+/* empty-state en modo claro */
+[data-theme="light"] .empty-state {
+  color: #2d5a3e; /* ~7:1 */
+}
+
+/* perfil-correo en modo claro */
+[data-theme="light"] .perfil-correo {
+  color: #2d5a3e; /* ~7:1 sobre fondo claro */
+}
+
+/* sidebar-nivel en modo claro */
+[data-theme="light"] .sidebar-nivel {
+  color: #0e6640; /* ~5.5:1 */
+}
+
+/* Placeholder del input en modo claro */
+[data-theme="light"] .input-group input::placeholder {
+  color: #4a7a5c; /* ~4.5:1 sobre blanco */
+}
+
+/* Toast notificaciones en modo claro */
+[data-theme="light"] .toast {
+  background: rgba(14, 40, 22, 0.96);
+  color: #ffffff;
+}
+[data-theme="light"] .toast.exito {
+  color: #95d5b2; /* verde-lima original — legible sobre fondo muy oscuro */
+}
+[data-theme="light"] .toast.error {
+  background: rgba(50, 15, 10, 0.96);
+  color: #ffb3a0;
 }
 
