@@ -1,5 +1,5 @@
 """
-routes/missions.py - Endpoints de misiones y progreso de Semiverd
+controllers/missions_controller.py - Endpoints de misiones y progreso de Semiverd
 """
 
 from datetime import datetime
@@ -8,13 +8,13 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models import Mision, ProgresoUsuario, Usuario, Recompensa, RecompensaUsuario, EstadoMision
-from app.schemas import (
+from models.database import get_db
+from models.models import Mision, ProgresoUsuario, Usuario, Recompensa, RecompensaUsuario, EstadoMision
+from models.schemas import (
     MisionRespuesta, MisionConProgreso,
     ActualizarProgreso, ProgresoRespuesta, MensajeRespuesta
 )
-from app.routes.auth import obtener_usuario_actual
+from controllers.auth_controller import obtener_usuario_actual
 
 router = APIRouter(prefix="/misiones", tags=["Misiones"])
 
@@ -105,7 +105,6 @@ def listar_misiones(
 ):
     """
     Retorna todas las misiones activas con el progreso del usuario actual.
-    La primera misión siempre está disponible; las demás se desbloquean en orden.
     """
     misiones = db.query(Mision).filter(Mision.activa == True).order_by(Mision.orden).all()
     resultado = []
@@ -116,12 +115,9 @@ def listar_misiones(
             ProgresoUsuario.mision_id == mision.id
         ).first()
 
-        # Determinar estado inicial si no existe progreso
         if progreso is None:
-            # La primera misión siempre está disponible
             estado_calculado = EstadoMision.DISPONIBLE if mision.orden == 1 else EstadoMision.BLOQUEADA
 
-            # Verificar si la misión anterior fue completada para desbloquear
             if mision.orden > 1:
                 mision_anterior = db.query(Mision).filter(Mision.orden == mision.orden - 1).first()
                 if mision_anterior:
@@ -187,7 +183,6 @@ def iniciar_mision(
     if not mision:
         raise HTTPException(status_code=404, detail="Misión no encontrada")
 
-    # Verificar si ya existe un progreso
     progreso = db.query(ProgresoUsuario).filter(
         ProgresoUsuario.usuario_id == usuario_actual.id,
         ProgresoUsuario.mision_id == mision_id
@@ -246,7 +241,6 @@ def completar_mision(
 ):
     """
     Marca una misión como completada y otorga los puntos y recompensas al usuario.
-    Actualiza el nivel del árbol Semiverd.
     """
     mision = db.query(Mision).filter(Mision.id == mision_id, Mision.activa == True).first()
     if not mision:

@@ -1,5 +1,5 @@
 """
-routes/tips.py - Endpoints para tips y consejos de la Academia de Guardianes
+controllers/tips_controller.py - Endpoints para tips y consejos de la Academia de Guardianes
 """
 
 import random
@@ -7,9 +7,9 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models import Tip
-from app.schemas import TipRespuesta
+from models.database import get_db
+from models.models import Tip
+from models.schemas import TipRespuesta
 
 router = APIRouter(prefix="/tips", tags=["Academia de Guardianes"])
 
@@ -33,7 +33,6 @@ def listar_tips(
 def tip_del_dia(db: Session = Depends(get_db)):
     """
     Retorna un tip aleatorio del día.
-    En producción se podría almacenar el tip del día en cache (Redis).
     """
     tips_activos = db.query(Tip).filter(Tip.activo == True).all()
 
@@ -41,7 +40,6 @@ def tip_del_dia(db: Session = Depends(get_db)):
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="No hay tips disponibles aún")
 
-    # Selección basada en el día actual para que sea consistente durante el día
     from datetime import date
     dia_del_anio = date.today().timetuple().tm_yday
     tip_index = dia_del_anio % len(tips_activos)

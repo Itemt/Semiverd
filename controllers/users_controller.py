@@ -1,18 +1,18 @@
 """
-routes/users.py - Endpoints de perfil de usuario
+controllers/users_controller.py - Endpoints de perfil de usuario
 """
 
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models import Usuario, ProgresoUsuario, RecompensaUsuario, Recompensa, EstadoMision
-from app.schemas import (
+from models.database import get_db
+from models.models import Usuario, ProgresoUsuario, RecompensaUsuario, Recompensa, EstadoMision
+from models.schemas import (
     UsuarioRespuesta, UsuarioActualizar,
     EstadisticasUsuario, RecompensaRespuesta, MensajeRespuesta
 )
-from app.routes.auth import obtener_usuario_actual
+from controllers.auth_controller import obtener_usuario_actual
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 

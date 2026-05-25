@@ -1,6 +1,6 @@
 """
 seed.py - Datos iniciales para la base de datos de Semiverd
-Ejecutar una sola vez: python -m app.seed
+Ejecutar una sola vez: python seed.py
 
 Carga:
   - Las 4 misiones de las Semillas Verdes
@@ -10,10 +10,9 @@ Carga:
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, engine
-from app.models import Base, Mision, Tip, Recompensa
+from models.database import SessionLocal, engine
+from models.models import Base, Mision, Tip, Recompensa
 
 
 def crear_tablas():

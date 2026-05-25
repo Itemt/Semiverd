@@ -1,5 +1,5 @@
 """
-routes/auth.py - Endpoints de autenticación de Semiverd
+controllers/auth_controller.py - Endpoints de autenticación de Semiverd
 Incluye login tradicional y login facial simulado (MVP)
 """
 
@@ -15,9 +15,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models import Usuario
-from app.schemas import (
+from models.database import get_db
+from models.models import Usuario
+from models.schemas import (
     UsuarioCrear, UsuarioRespuesta, TokenRespuesta,
     LoginRequest, LoginFacialRequest, MensajeRespuesta
 )
@@ -152,22 +152,12 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
     """
     Login facial simulado para el MVP.
-    En producción se integraría con face_recognition o AWS Rekognition.
-    
-    En este MVP:
-    1. Recibe la imagen en base64
-    2. Verifica que sea una imagen válida
-    3. Si se proporciona correo, busca el usuario y lo autentica
-    4. Simula validación facial exitosa
     """
-    # Validar que llegó una imagen base64 válida
     try:
-        # Limpiar prefijo de data URL si lo tiene
         imagen_data = datos.imagen_base64
         if "," in imagen_data:
             imagen_data = imagen_data.split(",")[1]
 
-        # Verificar que la decodificación es válida
         imagen_bytes = base64.b64decode(imagen_data)
         if len(imagen_bytes) < 100:
             raise HTTPException(
@@ -180,7 +170,6 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
             detail="Error al procesar la imagen. Intenta de nuevo."
         )
 
-    # Para el MVP: si se proporciona correo, buscar el usuario
     if datos.correo:
         usuario = db.query(Usuario).filter(Usuario.correo == datos.correo).first()
         if not usuario:
@@ -189,7 +178,6 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
                 detail="No se encontró un guardián con ese correo"
             )
 
-        # Guardar la foto de perfil si no tiene una
         if not usuario.foto_perfil:
             usuario.foto_perfil = datos.imagen_base64[:500]  # Guardar miniatura
             db.commit()
@@ -200,8 +188,6 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
             usuario=usuario
         )
     else:
-        # Sin correo: en producción haría búsqueda por similitud facial
-        # Para MVP retorna error descriptivo
         raise HTTPException(
             status_code=422,
             detail="Para el MVP, proporciona tu correo junto con la foto facial"
@@ -217,6 +203,6 @@ def obtener_mi_perfil(usuario_actual: Usuario = Depends(obtener_usuario_actual))
 @router.post("/logout", response_model=MensajeRespuesta)
 def logout(usuario_actual: Usuario = Depends(obtener_usuario_actual)):
     """
-    Logout simbólico. En producción se invalidaría el token en una blacklist.
+    Logout simbólico.
     """
     return MensajeRespuesta(mensaje=f"¡Hasta pronto, {usuario_actual.nombre}! Sigue cuidando el planeta 🌱")

@@ -3,7 +3,7 @@
  * Configuraciones globales y datos demo para Semiverd MVP
  */
 
-export const API_BASE = 'http://localhost:8000';
+export const API_BASE = window.location.origin;
 
 export const PUNTOS_NIVEL = {
   'Semilla': 100,
