@@ -24,4 +24,5 @@ htmlcov/
 *.ntvs*
 *.njsproj
 *.sln
-*.swp
+# User generated pictures
+views/pictures/
