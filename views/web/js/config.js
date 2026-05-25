@@ -33,7 +33,8 @@ export const DATOS_DEMO = {
       nombre_zona: 'Río Caudal', guardianes: 'Juliana y Giohan',
       categoria: 'agua', puntos_recompensa: 150, monedas_recompensa: 15,
       dificultad: 2, orden: 1, icono_emoji: '💧', color_hex: '#1E88E5',
-      estado: 'completada', porcentaje_completado: 100, puntos_ganados: 150
+      estado: 'completada', porcentaje_completado: 100, puntos_ganados: 150,
+      imagenes_personajes: ['/pictures/juliana/JULIANAHECHO.png', '/pictures/giohan/GIOHANASIGNANDOTAREA.png']
     },
     {
       id: 2, titulo: 'Bosque de Humo: Mapa Verde',
@@ -42,7 +43,8 @@ export const DATOS_DEMO = {
       nombre_zona: 'Bosque de Humo', guardianes: 'Sofía y Camila',
       categoria: 'bosque', puntos_recompensa: 200, monedas_recompensa: 20,
       dificultad: 3, orden: 2, icono_emoji: '🌳', color_hex: '#388E3C',
-      estado: 'en_progreso', porcentaje_completado: 40, puntos_ganados: 0
+      estado: 'en_progreso', porcentaje_completado: 40, puntos_ganados: 0,
+      imagenes_personajes: ['/pictures/maria sofia/CleanShot_2026-05-25_at_10.53.42_2x-removebg-preview.png', '/pictures/camila/CAMILAINVESTIGANDO.png']
     },
     {
       id: 3, titulo: 'Ciudad Gris: Reciclaje Electrónico',
@@ -51,7 +53,8 @@ export const DATOS_DEMO = {
       nombre_zona: 'Ciudad Gris', guardianes: 'Juliana, Camila, Sofía y Giohan',
       categoria: 'ciudad', puntos_recompensa: 300, monedas_recompensa: 30,
       dificultad: 4, orden: 3, icono_emoji: '♻️', color_hex: '#F57C00',
-      estado: 'disponible', porcentaje_completado: 0, puntos_ganados: 0
+      estado: 'disponible', porcentaje_completado: 0, puntos_ganados: 0,
+      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/maria sofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
     },
     {
       id: 4, titulo: 'Valle Energético: Eficiencia Verde',
@@ -60,7 +63,8 @@ export const DATOS_DEMO = {
       nombre_zona: 'Valle Energético', guardianes: 'Giohan',
       categoria: 'energia', puntos_recompensa: 250, monedas_recompensa: 25,
       dificultad: 3, orden: 4, icono_emoji: '⚡', color_hex: '#FDD835',
-      estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0
+      estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
+      imagenes_personajes: ['/pictures/giohan/GIOHANINVESTIGANDO.png']
     },
   ],
   tips: [

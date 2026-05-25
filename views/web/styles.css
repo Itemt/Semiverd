@@ -1625,7 +1625,46 @@ canvas#arbol-canvas {
   text-align: center;
   color: var(--color-text-muted);
   font-size: 0.85rem;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+.modal-personajes {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.modal-personaje-img {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modal-personaje-img:hover {
+  transform: scale(1.18) rotate(3deg);
+  border-color: var(--verde-claro);
+  box-shadow: 0 8px 25px rgba(82, 183, 136, 0.5);
+  cursor: pointer;
+}
+
+/* Light theme overrides for character images */
+[data-theme="light"] .modal-personaje-img {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .modal-personaje-img:hover {
+  border-color: var(--verde-medio);
+  box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3);
 }
 
 .modal-descripcion {

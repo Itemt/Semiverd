@@ -19,9 +19,49 @@ from controllers.auth_controller import obtener_usuario_actual
 router = APIRouter(prefix="/misiones", tags=["Misiones"])
 
 
-# ─────────────────────────────────────────────────────────
-# Funciones auxiliares
-# ─────────────────────────────────────────────────────────
+def resolver_imagenes_mision(guardianes: str, estado: str) -> List[str]:
+    limpio = guardianes.replace(" y ", ", ").replace(" , ", ", ")
+    nombres = [n.strip() for n in limpio.split(",")]
+    imagenes = []
+    for nombre in nombres:
+        if "juliana" in nombre.lower():
+            if estado == "bloqueada":
+                imagenes.append("/pictures/juliana/JULIANAESPERANDO.png")
+            elif estado == "disponible":
+                imagenes.append("/pictures/juliana/JULIANAPROPONIENDO.png")
+            elif estado == "en_progreso":
+                imagenes.append("/pictures/juliana/JULIANAREGANANDO.png")
+            else:
+                imagenes.append("/pictures/juliana/JULIANAHECHO.png")
+        elif "giohan" in nombre.lower():
+            if estado == "bloqueada":
+                imagenes.append("/pictures/giohan/GIOHANINVESTIGANDO.png")
+            elif estado == "disponible":
+                imagenes.append("/pictures/giohan/GIOHANDECIDIDO.png")
+            elif estado == "en_progreso":
+                imagenes.append("/pictures/giohan/GIOHANHACIENDO.png")
+            else:
+                imagenes.append("/pictures/giohan/GIOHANASIGNANDOTAREA.png")
+        elif "camila" in nombre.lower():
+            if estado == "bloqueada":
+                imagenes.append("/pictures/camila/CAMILAPENSANDO.png")
+            elif estado == "disponible":
+                imagenes.append("/pictures/camila/CAMILACREANDO1.png")
+            elif estado == "en_progreso":
+                imagenes.append("/pictures/camila/CAMILAINVESTIGANDO.png")
+            else:
+                imagenes.append("/pictures/camila/CAMILARESUELTO.png")
+        elif "sofía" in nombre.lower() or "sofia" in nombre.lower():
+            if estado == "bloqueada":
+                imagenes.append("/pictures/maria sofia/SOFIATRISTE.png")
+            elif estado == "disponible":
+                imagenes.append("/pictures/maria sofia/SOFIAINCONFORME.png")
+            elif estado == "en_progreso":
+                imagenes.append("/pictures/maria sofia/CleanShot_2026-05-25_at_10.53.42_2x-removebg-preview.png")
+            else:
+                imagenes.append("/pictures/maria sofia/SOFIAFELIZHECHO.png")
+    return imagenes
+
 
 def calcular_nivel_arbol(puntos: int) -> int:
     """Calcula el nivel del árbol (1-10) basado en los puntos totales"""
@@ -133,14 +173,16 @@ def listar_misiones(
                 **mision.__dict__,
                 estado=estado_calculado,
                 porcentaje_completado=0.0,
-                puntos_ganados=0
+                puntos_ganados=0,
+                imagenes_personajes=resolver_imagenes_mision(mision.guardianes, estado_calculado)
             )
         else:
             mision_con_progreso = MisionConProgreso(
                 **mision.__dict__,
                 estado=progreso.estado,
                 porcentaje_completado=progreso.porcentaje_completado,
-                puntos_ganados=progreso.puntos_ganados
+                puntos_ganados=progreso.puntos_ganados,
+                imagenes_personajes=resolver_imagenes_mision(mision.guardianes, progreso.estado)
             )
 
         resultado.append(mision_con_progreso)
@@ -164,11 +206,13 @@ def obtener_mision(
         ProgresoUsuario.mision_id == mision_id
     ).first()
 
+    estado_m = progreso.estado if progreso else "bloqueada"
     return MisionConProgreso(
         **mision.__dict__,
-        estado=progreso.estado if progreso else "bloqueada",
+        estado=estado_m,
         porcentaje_completado=progreso.porcentaje_completado if progreso else 0.0,
-        puntos_ganados=progreso.puntos_ganados if progreso else 0
+        puntos_ganados=progreso.puntos_ganados if progreso else 0,
+        imagenes_personajes=resolver_imagenes_mision(mision.guardianes, estado_m)
     )
 
 

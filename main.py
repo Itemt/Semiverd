@@ -77,6 +77,9 @@ def verificar_salud():
     return {"estado": "saludable", "servicio": "semiverd-api"}
 
 
+# Montar carpeta de fotos de personajes
+app.mount("/pictures", StaticFiles(directory="views/pictures"), name="pictures")
+
 # Montar archivos estáticos para el frontend (servido en la raíz)
 app.mount("/", StaticFiles(directory="views/web", html=True), name="web")
 

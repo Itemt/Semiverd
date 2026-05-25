@@ -89,6 +89,7 @@ class MisionRespuesta(MisionBase):
     id: int
     orden: int
     activa: bool
+    imagenes_personajes: List[str] = []
 
     class Config:
         from_attributes = True

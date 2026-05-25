@@ -13,6 +13,7 @@ export class MissionView {
     this.modalTitulo = document.getElementById('modal-mision-titulo');
     this.modalZona = document.getElementById('modal-mision-zona');
     this.modalGuardianes = document.getElementById('modal-mision-guardianes');
+    this.modalPersonajes = document.getElementById('modal-mision-personajes');
     this.modalDescripcion = document.getElementById('modal-mision-descripcion');
     this.modalPuntos = document.getElementById('modal-puntos');
     this.modalMonedas = document.getElementById('modal-monedas');
@@ -83,6 +84,34 @@ export class MissionView {
     this.modalTitulo.textContent = m.titulo;
     this.modalZona.textContent = m.nombre_zona;
     this.modalGuardianes.textContent = `Guardianes: ${m.guardianes}`;
+    
+    // Renderizar imágenes de los personajes
+    if (this.modalPersonajes) {
+      this.modalPersonajes.innerHTML = '';
+      if (m.imagenes_personajes && m.imagenes_personajes.length > 0) {
+        m.imagenes_personajes.forEach(imgUrl => {
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = 'Personaje';
+          img.className = 'modal-personaje-img';
+          
+          // Obtener nombre del personaje para el tooltip
+          let nombre = 'Guardián';
+          const lower = imgUrl.toLowerCase();
+          if (lower.includes('juliana')) nombre = 'Juliana';
+          else if (lower.includes('giohan')) nombre = 'Giohan';
+          else if (lower.includes('camila')) nombre = 'Camila';
+          else if (lower.includes('maria sofia') || lower.includes('sofia')) nombre = 'Sofía';
+          
+          img.title = nombre;
+          this.modalPersonajes.appendChild(img);
+        });
+        this.modalPersonajes.style.display = 'flex';
+      } else {
+        this.modalPersonajes.style.display = 'none';
+      }
+    }
+
     this.modalDescripcion.textContent = m.descripcion;
     this.modalPuntos.textContent = m.puntos_recompensa;
     this.modalMonedas.textContent = m.monedas_recompensa;
