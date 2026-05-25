@@ -41,10 +41,9 @@ export class LoginView {
 
   getCredentialsRegistro() {
     const nombre = document.getElementById('reg-nombre').value.trim();
-    const apodo = document.getElementById('reg-apodo').value.trim();
     const correo = document.getElementById('reg-correo').value.trim();
     const password = document.getElementById('reg-password').value.trim();
-    return { nombre, apodo, correo, password };
+    return { nombre, apodo: nombre, correo, password };
   }
 
   getCorreoFacial() {
@@ -65,7 +64,6 @@ export class LoginView {
     document.getElementById('login-correo').value = '';
     document.getElementById('login-password').value = '';
     document.getElementById('reg-nombre').value = '';
-    document.getElementById('reg-apodo').value = '';
     document.getElementById('reg-correo').value = '';
     document.getElementById('reg-password').value = '';
     document.getElementById('facial-correo').value = '';
