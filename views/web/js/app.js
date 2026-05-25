@@ -35,6 +35,20 @@ window.addEventListener('DOMContentLoaded', () => {
   // Instanciar Controlador (Controller)
   const controller = new AppController(model, views);
 
+  // Exponer a window para compatibilidad con handlers inline del HTML
+  window.mostrarTab = (tab) => views.loginView.mostrarTab(tab);
+  window.activarCamara = () => controller.activarCamara();
+  window.capturarFoto = () => controller.capturarFoto();
+  window.loginFacial = () => controller.ejecutarLoginFacial();
+  window.loginCorreo = () => controller.ejecutarLoginCorreo();
+  window.registrarUsuario = () => controller.ejecutarRegistro();
+  window.loginDemo = () => controller.ejecutarDemo();
+  window.irA = (route) => controller.irA(route);
+  window.cerrarSesion = () => controller.cerrarSesion();
+  window.toggleSidebar = () => views.mainView.toggleSidebar();
+  window.cerrarModalMision = () => views.missionView.cerrarModal();
+  window.filtrarTips = () => {}; // Ya manejado por addEventListener en el controller
+
   // Inicializar controlador (arranca tema, sesión, manejadores de eventos, etc.)
   controller.inicializar();
 });

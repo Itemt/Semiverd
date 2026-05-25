@@ -86,8 +86,14 @@
           </div>
         </div>
 
+        <!-- Nombre (solo primera vez) -->
+        <div class="input-group" id="facial-nombre-group">
+          <label for="facial-nombre">Tu nombre (solo la 1ª vez para registrarte) 🌿</label>
+          <input type="text" id="facial-nombre" placeholder="Ej: Juliana" autocomplete="given-name" />
+        </div>
+
         <div class="input-group">
-          <label for="facial-correo">Tu correo (ingresa para registrar tu rostro la 1ª vez · luego déjalo vacío) 🌿</label>
+          <label for="facial-correo">Tu correo (1ª vez para crear cuenta · luego déjalo vacío) 🌿</label>
           <input type="email" id="facial-correo" placeholder="Tu correo para crear o vincular tu cuenta" autocomplete="email" />
         </div>
 
@@ -152,7 +158,8 @@
     <!-- BARRA SUPERIOR -->
     <header class="topbar">
       <div class="topbar-left">
-        <button class="topbar-menu-btn" onclick="toggleSidebar()" aria-label="Menú">
+        <!-- Hamburguesa siempre visible -->
+        <button class="topbar-menu-btn" id="btn-hamburguesa" aria-label="Menú" title="Abrir menú">
           <span></span><span></span><span></span>
         </button>
         <span class="topbar-logo">🌱 Semiverd</span>
@@ -169,16 +176,34 @@
         <button class="topbar-theme-btn btn-toggle-tema" id="btn-toggle-tema" aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
           🌙
         </button>
-        <button class="topbar-avatar" onclick="irA('perfil')" aria-label="Perfil">
-          <span id="header-avatar">🌿</span>
-        </button>
+        <!-- Avatar con dropdown -->
+        <div class="topbar-avatar-wrapper" id="avatar-wrapper">
+          <button class="topbar-avatar" id="btn-avatar" aria-label="Perfil" title="Abrir perfil">
+            <span id="header-avatar">🌿</span>
+          </button>
+          <!-- Dropdown -->
+          <div class="avatar-dropdown" id="avatar-dropdown">
+            <div class="avatar-dropdown-header">
+              <span class="avatar-dd-icon" id="avatar-dd-icon">🌿</span>
+              <div>
+                <p class="avatar-dd-nombre" id="avatar-dd-nombre">Guardián</p>
+                <p class="avatar-dd-correo" id="avatar-dd-correo"></p>
+              </div>
+            </div>
+            <div class="avatar-dropdown-divider"></div>
+            <button class="avatar-dd-item" id="dd-ir-perfil">👤 Mi Perfil</button>
+            <button class="avatar-dd-item" id="dd-cambiar-foto">📷 Cambiar Foto</button>
+            <div class="avatar-dropdown-divider"></div>
+            <button class="avatar-dd-item avatar-dd-danger" id="dd-cerrar-sesion">🚪 Cerrar Sesión</button>
+          </div>
+        </div>
       </div>
     </header>
 
     <!-- SIDEBAR -->
     <nav id="sidebar" class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-avatar">🌿</div>
+        <div class="sidebar-avatar" id="sidebar-avatar-img">🌿</div>
         <div class="sidebar-info">
           <p class="sidebar-nombre" id="sidebar-nombre">Guardián</p>
           <p class="sidebar-nivel" id="sidebar-nivel">Semilla</p>
@@ -397,8 +422,31 @@
           <p>Tu historia como guardián</p>
         </div>
         <div class="perfil-card">
-          <div class="perfil-avatar">🌿</div>
-          <h3 id="perfil-nombre">Cargando...</h3>
+
+          <!-- Avatar con botón de cambio de foto -->
+          <div class="perfil-avatar-wrapper">
+            <div class="perfil-avatar-img" id="perfil-avatar-display">🌿</div>
+            <button class="perfil-avatar-edit-btn" id="btn-cambiar-foto-perfil" title="Cambiar foto de perfil">
+              📷
+            </button>
+            <input type="file" id="perfil-foto-input" accept="image/*" style="display:none;" />
+          </div>
+
+          <!-- Nombre editable inline -->
+          <div class="perfil-nombre-editable">
+            <h3 id="perfil-nombre" class="perfil-nombre-text">Cargando...</h3>
+            <button class="perfil-edit-btn" id="btn-editar-nombre" title="Editar nombre">✏️</button>
+          </div>
+
+          <!-- Editor de nombre (oculto por defecto) -->
+          <div class="perfil-nombre-editor oculto" id="perfil-nombre-editor">
+            <input type="text" id="perfil-nombre-input" class="perfil-nombre-input" placeholder="Tu nombre o apodo..." />
+            <div class="perfil-editor-acciones">
+              <button class="btn-primary perfil-btn-guardar" id="btn-guardar-nombre">✅ Guardar</button>
+              <button class="btn-secondary perfil-btn-cancelar" id="btn-cancelar-nombre">✕ Cancelar</button>
+            </div>
+          </div>
+
           <p class="perfil-nivel" id="perfil-nivel">Semilla</p>
           <p class="perfil-correo" id="perfil-correo"></p>
           <div class="stats-grid">

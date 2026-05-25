@@ -126,6 +126,40 @@ export class StateModel {
     return respuesta;
   }
 
+  async loginFacialConNombre(correo, nombre, fotoBase64) {
+    const respuesta = await this.api('POST', '/auth/login-facial', {
+      imagen_base64: fotoBase64,
+      correo: correo || null,
+      nombre: nombre || null
+    });
+    this.token = respuesta.access_token;
+    this.usuario = respuesta.usuario;
+    this.guardarSesion();
+    return respuesta;
+  }
+
+  async actualizarPerfil({ nombre, apodo, foto_perfil }) {
+    if (this.isDemo()) {
+      if (nombre !== undefined && nombre !== null) {
+        this.usuario.nombre = nombre;
+        this.usuario.apodo = apodo || nombre;
+      }
+      if (foto_perfil !== undefined && foto_perfil !== null) {
+        this.usuario.foto_perfil = foto_perfil;
+      }
+      this.guardarSesion();
+      return this.usuario;
+    }
+    const respuesta = await this.api('PUT', '/usuarios/perfil', {
+      nombre: nombre || null,
+      apodo: apodo || null,
+      foto_perfil: foto_perfil || null
+    });
+    this.usuario = respuesta;
+    this.guardarSesion();
+    return respuesta;
+  }
+
   async fetchMisiones() {
     if (this.isDemo()) {
       return this.misiones;

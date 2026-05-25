@@ -10,7 +10,10 @@ export class MainView {
     this.overlay = document.getElementById('sidebar-overlay');
     this.toastContainer = document.getElementById('toast-container');
     this.btnToggleTemas = document.querySelectorAll('.btn-toggle-tema');
-    
+    this.btnHamburguesa = document.getElementById('btn-hamburguesa');
+    this.avatarWrapper = document.getElementById('avatar-wrapper');
+    this.avatarDropdown = document.getElementById('avatar-dropdown');
+
     // Vistas principales
     this.pantallaLogin = document.getElementById('pantalla-login');
     this.pantallaApp = document.getElementById('pantalla-app');
@@ -28,13 +31,32 @@ export class MainView {
   }
 
   toggleSidebar() {
-    this.sidebar.classList.toggle('abierto');
-    this.overlay.classList.toggle('visible');
+    const abierto = this.sidebar.classList.toggle('abierto');
+    this.overlay.classList.toggle('visible', abierto);
+    // Animar hamburguesa
+    if (this.btnHamburguesa) {
+      this.btnHamburguesa.classList.toggle('hamburguesa-activo', abierto);
+    }
   }
 
   cerrarSidebar() {
     this.sidebar.classList.remove('abierto');
     this.overlay.classList.remove('visible');
+    if (this.btnHamburguesa) {
+      this.btnHamburguesa.classList.remove('hamburguesa-activo');
+    }
+  }
+
+  toggleAvatarDropdown() {
+    if (this.avatarDropdown) {
+      this.avatarDropdown.classList.toggle('abierto');
+    }
+  }
+
+  cerrarAvatarDropdown() {
+    if (this.avatarDropdown) {
+      this.avatarDropdown.classList.remove('abierto');
+    }
   }
 
   aplicarTema(tema) {
@@ -59,6 +81,33 @@ export class MainView {
 
     const headerMonedas = document.getElementById('header-monedas');
     if (headerMonedas) headerMonedas.textContent = usuario.monedas_verdes;
+
+    // Actualizar avatar con foto si existe
+    this._actualizarAvatar(usuario);
+  }
+
+  _actualizarAvatar(usuario) {
+    const foto = usuario?.foto_perfil;
+    const nombre = usuario?.apodo || usuario?.nombre || 'Guardián';
+    const correo = usuario?.correo || '';
+
+    // Topbar avatar
+    const headerAvatar = document.getElementById('header-avatar');
+    if (headerAvatar && foto) {
+      headerAvatar.innerHTML = `<img src="${foto}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+    }
+
+    // Dropdown nombre y correo
+    const ddNombre = document.getElementById('avatar-dd-nombre');
+    if (ddNombre) ddNombre.textContent = nombre;
+
+    const ddCorreo = document.getElementById('avatar-dd-correo');
+    if (ddCorreo) ddCorreo.textContent = correo;
+
+    const ddIcon = document.getElementById('avatar-dd-icon');
+    if (ddIcon && foto) {
+      ddIcon.innerHTML = `<img src="${foto}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+    }
   }
 
   actualizarSidebar(usuario) {
@@ -68,6 +117,12 @@ export class MainView {
 
     const sidebarNivel = document.getElementById('sidebar-nivel');
     if (sidebarNivel) sidebarNivel.textContent = usuario.nivel;
+
+    // Avatar sidebar
+    const sidebarAvatar = document.getElementById('sidebar-avatar-img');
+    if (sidebarAvatar && usuario?.foto_perfil) {
+      sidebarAvatar.innerHTML = `<img src="${usuario.foto_perfil}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+    }
   }
 
   actualizarMenuNavegacion(vistaActiva) {

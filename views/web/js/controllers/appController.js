@@ -74,23 +74,42 @@ export class AppController {
     const routes = ['inicio', 'arbol', 'camino', 'misiones', 'academia', 'ranking', 'perfil'];
     routes.forEach(route => {
       const navBtn = document.getElementById(`nav-${route}`);
-      if (navBtn) {
-        navBtn.addEventListener('click', () => this.irA(route));
-      }
+      if (navBtn) navBtn.addEventListener('click', () => this.irA(route));
       const bnavBtn = document.getElementById(`bnav-${route}`);
-      if (bnavBtn) {
-        bnavBtn.addEventListener('click', () => this.irA(route));
-      }
+      if (bnavBtn) bnavBtn.addEventListener('click', () => this.irA(route));
     });
 
-    // Control del sidebar
-    document.querySelector('.topbar-menu-btn').addEventListener('click', () => this.mainView.toggleSidebar());
+    // Control del sidebar (hamburguesa)
+    const btnHamb = document.getElementById('btn-hamburguesa');
+    if (btnHamb) btnHamb.addEventListener('click', () => this.mainView.toggleSidebar());
     this.mainView.overlay.addEventListener('click', () => this.mainView.cerrarSidebar());
-    
-    // Tema claro/oscuro
+
+    // Tema claro/oscuro (SIN toast)
     this.mainView.btnToggleTemas.forEach(btn => {
       btn.addEventListener('click', () => this.toggleTema());
     });
+
+    // Avatar dropdown
+    const btnAvatar = document.getElementById('btn-avatar');
+    if (btnAvatar) {
+      btnAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.mainView.toggleAvatarDropdown();
+      });
+    }
+    // Cerrar dropdown al hacer click fuera
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#avatar-wrapper')) {
+        this.mainView.cerrarAvatarDropdown();
+      }
+    });
+    // Items del dropdown
+    const ddPerfil = document.getElementById('dd-ir-perfil');
+    if (ddPerfil) ddPerfil.addEventListener('click', () => { this.irA('perfil'); this.mainView.cerrarAvatarDropdown(); });
+    const ddFoto = document.getElementById('dd-cambiar-foto');
+    if (ddFoto) ddFoto.addEventListener('click', () => { this.abrirSelectorFoto(); this.mainView.cerrarAvatarDropdown(); });
+    const ddSalir = document.getElementById('dd-cerrar-sesion');
+    if (ddSalir) ddSalir.addEventListener('click', () => { this.cerrarSesion(); this.mainView.cerrarAvatarDropdown(); });
 
     // Cerrar sesión
     document.querySelector('.sidebar-logout').addEventListener('click', () => this.cerrarSesion());
@@ -99,14 +118,11 @@ export class AppController {
     // Filtros de la academia
     document.querySelectorAll('.filtros-categoria .filtro-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const cat = e.target.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || null;
-        // Evitamos usar el atributo inline onclick y añadimos lógica nativa
         let filterCat = null;
         if (e.target.textContent.includes('Jardín')) filterCat = 'jardinería';
         else if (e.target.textContent.includes('Agua')) filterCat = 'agua';
         else if (e.target.textContent.includes('Energía')) filterCat = 'energia';
         else if (e.target.textContent.includes('Reciclaje')) filterCat = 'reciclaje';
-
         this.academiaView.actualizarFiltrosActivos(e.target);
         this.academiaView.renderTips(this.model.tips, filterCat);
       });
@@ -118,6 +134,22 @@ export class AppController {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.missionView.cerrarModal();
     });
+
+    // Perfil: editar nombre
+    const btnEditarNombre = document.getElementById('btn-editar-nombre');
+    if (btnEditarNombre) btnEditarNombre.addEventListener('click', () => this.abrirEditorNombre());
+    const btnGuardarNombre = document.getElementById('btn-guardar-nombre');
+    if (btnGuardarNombre) btnGuardarNombre.addEventListener('click', () => this.guardarNombrePerfil());
+    const btnCancelarNombre = document.getElementById('btn-cancelar-nombre');
+    if (btnCancelarNombre) btnCancelarNombre.addEventListener('click', () => this.cerrarEditorNombre());
+
+    // Perfil: cambiar foto
+    const btnCambiarFoto = document.getElementById('btn-cambiar-foto-perfil');
+    if (btnCambiarFoto) btnCambiarFoto.addEventListener('click', () => this.abrirSelectorFoto());
+    const perfilAvatarDisplay = document.getElementById('perfil-avatar-display');
+    if (perfilAvatarDisplay) perfilAvatarDisplay.addEventListener('click', () => this.abrirSelectorFoto());
+    const fotoInput = document.getElementById('perfil-foto-input');
+    if (fotoInput) fotoInput.addEventListener('change', (e) => this.procesarFotoSeleccionada(e));
   }
 
   async ejecutarLoginCorreo() {
@@ -199,12 +231,12 @@ export class AppController {
 
   async ejecutarLoginFacial() {
     const correo = this.loginView.getCorreoFacial();
+    const nombre = document.getElementById('facial-nombre')?.value?.trim() || null;
     if (!this.model.fotoCapturada) {
       this.loginView.mostrarMensaje('Primero captura tu foto 📷', 'error');
       return;
     }
 
-    const esNuevo = correo && !this.model.usuario;
     this.loginView.mostrarMensaje(
       correo
         ? '🌱 Registrando y vinculando tu rostro...'
@@ -212,7 +244,7 @@ export class AppController {
       ''
     );
     try {
-      const respuesta = await this.model.loginFacial(correo, this.model.fotoCapturada);
+      const respuesta = await this.model.loginFacialConNombre(correo, nombre, this.model.fotoCapturada);
       const nombreGuardian = respuesta?.usuario?.apodo || respuesta?.usuario?.nombre || 'Guardián';
       const mensaje = correo
         ? `✅ ¡Rostro vinculado! Bienvenido, ${nombreGuardian} 🌿`
@@ -236,9 +268,19 @@ export class AppController {
   toggleTema() {
     const actual = document.documentElement.getAttribute('data-theme') || 'dark';
     const nuevo = actual === 'dark' ? 'light' : 'dark';
+    
+    // Deshabilitar animaciones temporalmente para el cambio de tema
+    document.documentElement.classList.add('no-transition');
+    
     this.mainView.aplicarTema(nuevo);
     localStorage.setItem('semiverd_tema', nuevo);
-    this.mainView.toast(nuevo === 'light' ? '☀️ Modo claro activado' : '🌙 Modo oscuro activado', 'exito');
+    
+    // Forzar reflow
+    window.getComputedStyle(document.documentElement).opacity;
+    
+    setTimeout(() => {
+      document.documentElement.classList.remove('no-transition');
+    }, 50);
   }
 
   entrarApp() {
@@ -352,6 +394,96 @@ export class AppController {
     } catch (err) {
       this.mainView.toast(err.message || 'Error al completar la misión', 'error');
     }
+  }
+
+  // ─── Perfil: Editar nombre ────────────────────────────────
+  abrirEditorNombre() {
+    const editor = document.getElementById('perfil-nombre-editor');
+    const input = document.getElementById('perfil-nombre-input');
+    const nombreActual = this.model.usuario?.apodo || this.model.usuario?.nombre || '';
+    if (editor) {
+      editor.classList.remove('oculto');
+      if (input) { input.value = nombreActual; input.focus(); }
+    }
+  }
+
+  cerrarEditorNombre() {
+    const editor = document.getElementById('perfil-nombre-editor');
+    if (editor) editor.classList.add('oculto');
+  }
+
+  async guardarNombrePerfil() {
+    const input = document.getElementById('perfil-nombre-input');
+    const nuevoNombre = input?.value?.trim();
+    if (!nuevoNombre) {
+      this.mainView.toast('Escribe un nombre válido 🌱', 'error');
+      return;
+    }
+    try {
+      // Guardar en backend y modelo local
+      await this.model.actualizarPerfil({ nombre: nuevoNombre, apodo: nuevoNombre });
+      this.cerrarEditorNombre();
+      // Actualizar UI
+      const perfilNombre = document.getElementById('perfil-nombre');
+      if (perfilNombre) perfilNombre.textContent = nuevoNombre;
+      this.mainView.actualizarSidebar(this.model.usuario);
+      this.mainView.actualizarTopbar(this.model.usuario);
+      const bienvenidaNombre = document.getElementById('bienvenida-nombre');
+      if (bienvenidaNombre) bienvenidaNombre.textContent = nuevoNombre;
+      this.mainView.toast(`✅ Nombre actualizado a "${nuevoNombre}" 🌿`, 'exito');
+    } catch (err) {
+      this.mainView.toast(err.message || 'Error al guardar el nombre', 'error');
+    }
+  }
+
+  // ─── Perfil: Cambiar foto ─────────────────────────────────
+  abrirSelectorFoto() {
+    const input = document.getElementById('perfil-foto-input');
+    if (input) input.click();
+  }
+
+  procesarFotoSeleccionada(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.mainView.toast('Por favor selecciona una imagen válida 📷', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target.result;
+      try {
+        // Guardar en backend y modelo local
+        await this.model.actualizarPerfil({ foto_perfil: base64 });
+        // Actualizar todos los avatares en la UI
+        this._actualizarFotoEnUI(base64);
+        this.mainView.toast('✅ Foto de perfil actualizada 🌿', 'exito');
+      } catch (err) {
+        this.mainView.toast(err.message || 'Error al actualizar la foto de perfil', 'error');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  _actualizarFotoEnUI(base64) {
+    const imgTag = `<img src="${base64}" alt="Foto de perfil" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+
+    // Topbar avatar
+    const headerAvatar = document.getElementById('header-avatar');
+    if (headerAvatar) headerAvatar.innerHTML = imgTag;
+
+    // Dropdown
+    const ddIcon = document.getElementById('avatar-dd-icon');
+    if (ddIcon) ddIcon.innerHTML = imgTag;
+
+    // Sidebar avatar
+    const sidebarAvatar = document.getElementById('sidebar-avatar-img');
+    if (sidebarAvatar) sidebarAvatar.innerHTML = imgTag;
+
+    // Perfil avatar
+    const perfilDisplay = document.getElementById('perfil-avatar-display');
+    if (perfilDisplay) perfilDisplay.innerHTML = imgTag;
   }
 
   iniciarAnimacionArbol() {
