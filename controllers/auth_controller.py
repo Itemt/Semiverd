@@ -195,9 +195,27 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
     # 1. Extraer el encoding del rostro enviado
     encoding_login = obtener_encoding_facial(datos.imagen_base64)
 
-    # Caso 1: Se provee correo → Vincular o auto-registrar
+    # Caso 1: Se provee correo → Vincular, verificar o auto-registrar
     if datos.correo:
         usuario = db.query(Usuario).filter(Usuario.correo == datos.correo).first()
+
+        # Si el usuario ya existe y ya tiene rostro vinculado, se debe VERIFICAR, no sobreescribir libremente
+        if usuario and usuario.face_encoding:
+            try:
+                enc_lista = json.loads(usuario.face_encoding)
+                encoding_registrado = np.array(enc_lista)
+                # Comparar rostros
+                distancias = face_recognition.face_distance([encoding_registrado], encoding_login)
+                if len(distancias) == 0 or distancias[0] > 0.58:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="El rostro capturado no coincide con el guardián registrado para este correo. 📷"
+                    )
+            except HTTPException as he:
+                raise he
+            except Exception:
+                # Si el JSON estaba corrupto, permitimos re-vincular
+                pass
 
         # Si no existe, auto-registrar con los datos proporcionados
         if not usuario:
@@ -215,9 +233,11 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
             db.add(usuario)
             db.flush()  # Para obtener el ID antes del commit
 
-        # Serializar y almacenar el encoding facial
-        usuario.face_encoding = json.dumps(encoding_login.tolist())
-        # Almacenar la foto de perfil en miniatura
+        # Si el usuario no tenía rostro o era nuevo, almacenamos el encoding
+        if not usuario.face_encoding:
+            usuario.face_encoding = json.dumps(encoding_login.tolist())
+            
+        # Siempre actualizamos la foto de perfil para refrescarla en la UI
         usuario.foto_perfil = datos.imagen_base64
         db.commit()
         db.refresh(usuario)
