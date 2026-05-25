@@ -50,13 +50,13 @@
 
       <!-- Tabs -->
       <div class="tabs-container">
-        <button class="tab-btn activo" id="tab-facial" onclick="mostrarTab('facial')">
+        <button class="tab-btn activo" id="tab-facial">
           📷 Acceso Facial
         </button>
-        <button class="tab-btn" id="tab-correo" onclick="mostrarTab('correo')">
+        <button class="tab-btn" id="tab-correo">
           📧 Con Correo
         </button>
-        <button class="tab-btn" id="tab-registro" onclick="mostrarTab('registro')">
+        <button class="tab-btn" id="tab-registro">
           🌱 Registrarse
         </button>
       </div>
@@ -77,10 +77,10 @@
           </div>
 
           <div class="camera-controls">
-            <button class="btn-camara" id="btn-activar-camara" onclick="activarCamara()">
+            <button class="btn-camara" id="btn-activar-camara">
               🎥 Activar Cámara
             </button>
-            <button class="btn-capturar oculto" id="btn-capturar" onclick="capturarFoto()">
+            <button class="btn-capturar oculto" id="btn-capturar">
               📸 Capturar Foto
             </button>
           </div>
@@ -97,7 +97,7 @@
           <input type="email" id="facial-correo" placeholder="Tu correo para crear o vincular tu cuenta" autocomplete="email" />
         </div>
 
-        <button class="btn-primary" id="btn-login-facial" onclick="loginFacial()" disabled>
+        <button class="btn-primary" id="btn-login-facial" disabled>
           🌿 Entrar como Guardián
         </button>
       </div>
@@ -112,7 +112,7 @@
           <label for="login-password">Contraseña</label>
           <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
         </div>
-        <button class="btn-primary" onclick="loginCorreo()">
+        <button class="btn-primary">
           🌿 Ingresar
         </button>
       </div>
@@ -135,7 +135,7 @@
           <label for="reg-password">Contraseña (mín. 6 caracteres)</label>
           <input type="password" id="reg-password" placeholder="••••••••" autocomplete="new-password" />
         </div>
-        <button class="btn-primary" onclick="registrarUsuario()">
+        <button class="btn-primary">
           🌱 Unirme a las Semillas Verdes
         </button>
       </div>
@@ -144,7 +144,7 @@
       <div id="login-mensaje" class="mensaje oculto"></div>
 
       <!-- Modo demo -->
-      <button class="btn-demo" onclick="loginDemo()">
+      <button class="btn-demo">
         🎮 Ver Demo (sin cuenta)
       </button>
     </div>

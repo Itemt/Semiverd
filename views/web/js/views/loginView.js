@@ -87,7 +87,15 @@ export class LoginView {
     this.canvas.height = this.video.videoHeight || 320;
 
     const ctx = this.canvas.getContext('2d');
+    
+    // Voltear horizontalmente para efecto espejo idéntico al de la cámara
+    ctx.translate(this.canvas.width, 0);
+    ctx.scale(-1, 1);
+    
     ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+    
+    // Restaurar transformaciones
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
     // Guardar como base64
     const fotoUrl = this.canvas.toDataURL('image/jpeg', 0.8);
