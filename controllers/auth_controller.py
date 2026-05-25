@@ -1,15 +1,19 @@
 """
 controllers/auth_controller.py - Endpoints de autenticación de Semiverd
-Incluye login tradicional y login facial simulado (MVP)
+Incluye login tradicional y login facial real (Face ID)
 """
 
 import base64
 import io
 import os
+import json
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+import numpy as np
+import face_recognition
+from PIL import Image
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -73,6 +77,37 @@ def obtener_usuario_actual(token: str = Depends(oauth2_scheme), db: Session = De
         raise credenciales_exception
 
     return usuario
+
+
+def obtener_encoding_facial(imagen_base64: str) -> np.ndarray:
+    """Decodifica una imagen en base64 y extrae el vector 128D del rostro"""
+    try:
+        if "," in imagen_base64:
+            imagen_base64 = imagen_base64.split(",")[1]
+
+        imagen_bytes = base64.b64decode(imagen_base64)
+        if len(imagen_bytes) < 100:
+            raise ValueError("Imagen demasiado pequeña o inválida")
+            
+        # Convertir bytes a imagen RGB de PIL
+        img = Image.open(io.BytesIO(imagen_bytes)).convert("RGB")
+        img_np = np.array(img)
+        
+        # Extraer codificaciones faciales
+        encodings = face_recognition.face_encodings(img_np)
+        if not encodings:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se detectó ningún rostro en la foto. Centra tu cara frente a la cámara e intenta de nuevo. 📷"
+            )
+        return encodings[0]
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al procesar la imagen facial: {str(e)}"
+        )
 
 
 # ─────────────────────────────────────────────────────────
@@ -151,47 +186,89 @@ def login_form(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 @router.post("/login-facial", response_model=TokenRespuesta)
 def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
     """
-    Login facial simulado para el MVP.
+    Login facial real (Face ID).
+    - Si se envía 'correo', vincula el rostro capturado a ese usuario.
+    - Si no se envía 'correo', realiza una búsqueda biométrica en la base de datos
+      comparando la foto con todos los rostros registrados.
     """
-    try:
-        imagen_data = datos.imagen_base64
-        if "," in imagen_data:
-            imagen_data = imagen_data.split(",")[1]
+    # 1. Extraer el encoding del rostro enviado
+    encoding_login = obtener_encoding_facial(datos.imagen_base64)
 
-        imagen_bytes = base64.b64decode(imagen_data)
-        if len(imagen_bytes) < 100:
-            raise HTTPException(
-                status_code=400,
-                detail="La imagen capturada no es válida"
-            )
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Error al procesar la imagen. Intenta de nuevo."
-        )
-
+    # Caso 1: Registro/Vinculación inicial (se provee correo)
     if datos.correo:
         usuario = db.query(Usuario).filter(Usuario.correo == datos.correo).first()
         if not usuario:
             raise HTTPException(
-                status_code=404,
-                detail="No se encontró un guardián con ese correo"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No se encontró un guardián con ese correo para vincular el rostro"
             )
 
-        if not usuario.foto_perfil:
-            usuario.foto_perfil = datos.imagen_base64[:500]  # Guardar miniatura
-            db.commit()
+        # Serializar y almacenar el encoding
+        usuario.face_encoding = json.dumps(encoding_login.tolist())
+        # Almacenar la foto de perfil en miniatura
+        usuario.foto_perfil = datos.imagen_base64
+        db.commit()
+        db.refresh(usuario)
 
         token = crear_token_acceso(data={"sub": usuario.correo})
-        return TokenRespuesta(
-            access_token=token,
-            usuario=usuario
-        )
+        return TokenRespuesta(access_token=token, usuario=usuario)
+
+    # Caso 2: Búsqueda Biométrica directa (Face ID sin correo)
     else:
-        raise HTTPException(
-            status_code=422,
-            detail="Para el MVP, proporciona tu correo junto con la foto facial"
-        )
+        # Obtener todos los usuarios que tengan rostro registrado
+        usuarios_con_rostro = db.query(Usuario).filter(Usuario.face_encoding != None, Usuario.activo == True).all()
+        
+        if not usuarios_con_rostro:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No hay rostros registrados en el sistema. Registra tu rostro primero ingresando tu correo. 📷"
+            )
+
+        # Deserializar todos los encodings de la base de datos
+        encodings_conocidos = []
+        usuarios_validos = []
+        for u in usuarios_con_rostro:
+            try:
+                enc_lista = json.loads(u.face_encoding)
+                encodings_conocidos.append(np.array(enc_lista))
+                usuarios_validos.append(u)
+            except Exception:
+                continue
+
+        if not encodings_conocidos:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se pudieron cargar los datos faciales registrados"
+            )
+
+        # Calcular distancia euclidiana entre el rostro de login y los registrados
+        distancias = face_recognition.face_distance(encodings_conocidos, encoding_login)
+        
+        if len(distancias) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Rostro no reconocido. Intenta centrar tu cara frente a la cámara o ingresa con tu correo. 📷"
+            )
+            
+        # Encontrar el índice de la distancia mínima
+        idx_minimo = np.argmin(distancias)
+        distancia_minima = distancias[idx_minimo]
+
+        # Umbral estándar de face_recognition: 0.6. Usamos 0.58 para mayor seguridad.
+        if distancia_minima <= 0.58:
+            usuario_autenticado = usuarios_validos[idx_minimo]
+            
+            # Actualizar racha y último acceso
+            usuario_autenticado.ultimo_acceso = datetime.utcnow()
+            db.commit()
+
+            token = crear_token_acceso(data={"sub": usuario_autenticado.correo})
+            return TokenRespuesta(access_token=token, usuario=usuario_autenticado)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Rostro no reconocido o no registrado. Por favor, ingresa tu correo para vincularlo por primera vez. 🌿"
+            )
 
 
 @router.get("/yo", response_model=UsuarioRespuesta)
@@ -206,3 +283,4 @@ def logout(usuario_actual: Usuario = Depends(obtener_usuario_actual)):
     Logout simbólico.
     """
     return MensajeRespuesta(mensaje=f"¡Hasta pronto, {usuario_actual.nombre}! Sigue cuidando el planeta 🌱")
+

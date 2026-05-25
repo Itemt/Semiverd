@@ -118,7 +118,7 @@ export class StateModel {
   async loginFacial(correo, fotoBase64) {
     const respuesta = await this.api('POST', '/auth/login-facial', {
       imagen_base64: fotoBase64,
-      correo
+      correo: correo || null
     });
     this.token = respuesta.access_token;
     this.usuario = respuesta.usuario;

@@ -201,10 +201,6 @@ export class AppController {
       this.loginView.mostrarMensaje('Primero captura tu foto 📷', 'error');
       return;
     }
-    if (!correo) {
-      this.loginView.mostrarMensaje('Ingresa tu correo para identificarte (MVP)', 'error');
-      return;
-    }
 
     this.loginView.mostrarMensaje('Verificando identidad...', '');
     try {

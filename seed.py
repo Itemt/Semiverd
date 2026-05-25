@@ -17,6 +17,15 @@ from models.models import Base, Mision, Tip, Recompensa
 
 def crear_tablas():
     """Crea todas las tablas en la base de datos"""
+    try:
+        from sqlalchemy import MetaData
+        meta = MetaData()
+        meta.reflect(bind=engine)
+        meta.drop_all(bind=engine)
+        print("🗑️  Tablas anteriores eliminadas (limpieza completa)")
+    except Exception as e:
+        print(f"⚠️ Advertencia al eliminar tablas: {e}")
+        
     Base.metadata.create_all(bind=engine)
     print("✅ Tablas creadas exitosamente")
 

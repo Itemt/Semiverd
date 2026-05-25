@@ -78,6 +78,7 @@ class Usuario(Base):
 
     # Foto de perfil (base64 o ruta)
     foto_perfil = Column(Text, nullable=True)
+    face_encoding = Column(Text, nullable=True)    # Vector 128D serializado en JSON
 
     # Estado
     activo = Column(Boolean, default=True)
