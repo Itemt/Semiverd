@@ -36,7 +36,22 @@ export class AppController {
     // 5. Verificar sesión existente
     const sesionActiva = this.model.cargarSesionGuardada();
     if (sesionActiva) {
-      this.entrarApp();
+      if (this.model.isDemo()) {
+        this.entrarApp();
+      } else {
+        this.model.verificarToken().then(valido => {
+          if (valido) {
+            this.entrarApp();
+          } else {
+            this.mainView.mostrarPantalla('login');
+            this.loginView.mostrarTab('facial');
+            this.mainView.toast('Tu sesión ha expirado. Por favor ingresa de nuevo. 🌿', 'error');
+          }
+        }).catch(() => {
+          this.mainView.mostrarPantalla('login');
+          this.loginView.mostrarTab('facial');
+        });
+      }
     } else {
       this.mainView.mostrarPantalla('login');
       this.loginView.mostrarTab('facial');
@@ -352,7 +367,7 @@ export class AppController {
       onCompletar: (id) => this.ejecutarCompletarMision(id)
     };
 
-    this.missionView.abrir(m, callbacks);
+    this.missionView.abrirModal(m, callbacks);
   }
 
   async ejecutarIniciarMision(misionId) {

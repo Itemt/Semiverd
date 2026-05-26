@@ -48,10 +48,12 @@ def actualizar_perfil(
         
         # Intentar actualizar el encoding facial (Face ID) si la nueva foto contiene un rostro legible
         try:
-            from controllers.auth_controller import obtener_encoding_facial
+            from controllers.auth_controller import obtener_encoding_facial, guardar_imagen_rostro_local
             import json
             encoding = obtener_encoding_facial(datos.foto_perfil)
-            usuario_actual.face_encoding = json.dumps(encoding.tolist())
+            usuario_actual.face_encoding = json.dumps([encoding.tolist()])
+            # Guardar la imagen localmente en la base de datos de rostros
+            guardar_imagen_rostro_local(usuario_actual.id, datos.foto_perfil)
         except Exception:
             # Si no hay rostro o falla, no se actualiza el Face ID, solo la foto de perfil en la UI
             pass

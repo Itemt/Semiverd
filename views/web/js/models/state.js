@@ -43,6 +43,18 @@ export class StateModel {
     return false;
   }
 
+  async verificarToken() {
+    if (this.isDemo()) return true;
+    try {
+      this.usuario = await this.api('GET', '/auth/yo');
+      this.guardarSesion();
+      return true;
+    } catch (err) {
+      this.cerrarSesion();
+      return false;
+    }
+  }
+
   guardarSesion() {
     localStorage.setItem('semiverd_token', this.token);
     localStorage.setItem('semiverd_usuario', JSON.stringify(this.usuario));

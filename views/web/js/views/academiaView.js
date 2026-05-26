@@ -26,7 +26,17 @@ export class AcademiaView {
         <div class="tip-card-titulo">${tip.titulo}</div>
         <div class="tip-card-contenido">${tip.contenido}</div>
         ${tip.guardian_autor ? `<div class="tip-card-guardian">💚 ${tip.guardian_autor}</div>` : ''}
+        <div class="tip-card-expand-btn">Leer más 🗺️</div>
       `;
+
+      card.addEventListener('click', () => {
+        const esExpandido = card.classList.toggle('expandida');
+        const btn = card.querySelector('.tip-card-expand-btn');
+        if (btn) {
+          btn.textContent = esExpandido ? 'Cerrar ✕' : 'Leer más 🗺️';
+        }
+      });
+
       this.container.appendChild(card);
     });
 

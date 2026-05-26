@@ -8,7 +8,7 @@ import io
 import os
 import json
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 import face_recognition
@@ -110,6 +110,81 @@ def obtener_encoding_facial(imagen_base64: str) -> np.ndarray:
         )
 
 
+FACES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "faces_db")
+
+def guardar_imagen_rostro_local(user_id: int, imagen_base64: str) -> str:
+    """Decodifica y guarda la imagen del rostro en el disco local"""
+    try:
+        # Limpiar base64
+        if "," in imagen_base64:
+            imagen_base64 = imagen_base64.split(",")[1]
+        imagen_bytes = base64.b64decode(imagen_base64)
+        
+        # Crear directorio para el usuario
+        user_dir = os.path.join(FACES_DIR, f"user_{user_id}")
+        os.makedirs(user_dir, exist_ok=True)
+        
+        # Generar nombre único usando timestamp
+        timestamp = int(datetime.utcnow().timestamp() * 1000)
+        filename = f"face_{timestamp}.png"
+        filepath = os.path.join(user_dir, filename)
+        
+        # Guardar archivo
+        with open(filepath, "wb") as f:
+            f.write(imagen_bytes)
+            
+        # Mantener un límite físico de archivos en disco (máximo 5)
+        archivos = sorted(
+            [os.path.join(user_dir, arch) for arch in os.listdir(user_dir) if arch.startswith("face_")],
+            key=os.path.getmtime
+        )
+        while len(archivos) > 5:
+            viejo = archivos.pop(0)
+            try:
+                os.remove(viejo)
+            except OSError:
+                pass
+                
+        return filepath
+    except Exception as e:
+        print(f"Error al guardar imagen de rostro localmente: {e}")
+        return ""
+
+
+def sincronizar_encodings_desde_disco(usuario: Usuario, db: Session) -> List[np.ndarray]:
+    """
+    Escanea las imágenes locales del usuario, genera sus encodings y 
+    actualiza el caché en la base de datos si es necesario (self-healing).
+    """
+    user_dir = os.path.join(FACES_DIR, f"user_{usuario.id}")
+    if not os.path.exists(user_dir):
+        return []
+        
+    archivos = [os.path.join(user_dir, f) for f in os.listdir(user_dir) if f.startswith("face_")]
+    if not archivos:
+        return []
+        
+    encodings = []
+    for filepath in archivos:
+        try:
+            # Leer imagen y extraer encoding
+            img = Image.open(filepath).convert("RGB")
+            img_np = np.array(img)
+            encs = face_recognition.face_encodings(img_np)
+            if encs:
+                encodings.append(encs[0])
+        except Exception as e:
+            print(f"Error cargando imagen {filepath} para encoding: {e}")
+            
+    if encodings:
+        # Actualizar caché de la base de datos
+        lista_json = [enc.tolist() for enc in encodings]
+        usuario.face_encoding = json.dumps(lista_json)
+        db.commit()
+        
+    return encodings
+
+
 # ─────────────────────────────────────────────────────────
 # Endpoints
 # ─────────────────────────────────────────────────────────
@@ -199,23 +274,49 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
     if datos.correo:
         usuario = db.query(Usuario).filter(Usuario.correo == datos.correo).first()
 
-        # Si el usuario ya existe y ya tiene rostro vinculado, se debe VERIFICAR, no sobreescribir libremente
-        if usuario and usuario.face_encoding:
-            try:
-                enc_lista = json.loads(usuario.face_encoding)
-                encoding_registrado = np.array(enc_lista)
-                # Comparar rostros
-                distancias = face_recognition.face_distance([encoding_registrado], encoding_login)
-                if len(distancias) == 0 or distancias[0] > 0.58:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="El rostro capturado no coincide con el guardián registrado para este correo. 📷"
-                    )
-            except HTTPException as he:
-                raise he
-            except Exception:
-                # Si el JSON estaba corrupto, permitimos re-vincular
-                pass
+        # Si el usuario ya existe y ya tiene rostro vinculado (o respaldado en disco)
+        if usuario:
+            # Self-healing: restaurar desde disco si la base de datos se borró
+            if not usuario.face_encoding:
+                sincronizar_encodings_desde_disco(usuario, db)
+
+            if usuario.face_encoding:
+                try:
+                    enc_lista = json.loads(usuario.face_encoding)
+                    
+                    # Soporte para formato legacy (una sola lista de floats) o formato multi-template (lista de listas)
+                    if isinstance(enc_lista[0], (int, float)):
+                        encodings_registrados = [np.array(enc_lista)]
+                    else:
+                        encodings_registrados = [np.array(enc) for enc in enc_lista]
+                    
+                    # Comparar rostro de login contra todos los registrados para este usuario
+                    distancias = face_recognition.face_distance(encodings_registrados, encoding_login)
+                    if len(distancias) == 0 or np.min(distancias) > 0.60:
+                        raise HTTPException(
+                            status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="El rostro capturado no coincide con el guardián registrado para este correo. 📷"
+                        )
+                    
+                    # Guardar la imagen localmente como respaldo físico
+                    guardar_imagen_rostro_local(usuario.id, datos.imagen_base64)
+                    
+                    # Coincide exitosamente. Agregar la nueva plantilla para aprendizaje adaptativo (máx 5)
+                    if isinstance(enc_lista[0], (int, float)):
+                        enc_lista = [enc_lista]
+                    
+                    # Solo agregar si no es extremadamente redundante (distancia > 0.22 con las ya guardadas)
+                    if np.min(distancias) > 0.22:
+                        enc_lista.append(encoding_login.tolist())
+                        if len(enc_lista) > 5:
+                            enc_lista.pop(0) # Eliminar la más antigua
+                        usuario.face_encoding = json.dumps(enc_lista)
+                except HTTPException as he:
+                    raise he
+                except Exception:
+                    # Si el JSON está corrupto, permitimos re-vincular de cero
+                    usuario.face_encoding = json.dumps([encoding_login.tolist()])
+                    guardar_imagen_rostro_local(usuario.id, datos.imagen_base64)
 
         # Si no existe, auto-registrar con los datos proporcionados
         if not usuario:
@@ -233,9 +334,12 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
             db.add(usuario)
             db.flush()  # Para obtener el ID antes del commit
 
+        # Guardar la imagen en el disco local
+        guardar_imagen_rostro_local(usuario.id, datos.imagen_base64)
+
         # Si el usuario no tenía rostro o era nuevo, almacenamos el encoding
         if not usuario.face_encoding:
-            usuario.face_encoding = json.dumps(encoding_login.tolist())
+            usuario.face_encoding = json.dumps([encoding_login.tolist()])
             
         # Siempre actualizamos la foto de perfil para refrescarla en la UI
         usuario.foto_perfil = datos.imagen_base64
@@ -247,8 +351,16 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
 
     # Caso 2: Búsqueda Biométrica directa (Face ID sin correo)
     else:
-        # Obtener todos los usuarios que tengan rostro registrado
-        usuarios_con_rostro = db.query(Usuario).filter(Usuario.face_encoding != None, Usuario.activo == True).all()
+        # Obtener todos los usuarios activos
+        usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
+        
+        # Self-healing dinámico: restaurar desde el disco para cualquier usuario con caché vacío
+        for u in usuarios:
+            if not u.face_encoding:
+                sincronizar_encodings_desde_disco(u, db)
+                
+        # Filtrar usuarios que tienen rostros válidos cargados
+        usuarios_con_rostro = [u for u in usuarios if u.face_encoding is not None]
         
         if not usuarios_con_rostro:
             raise HTTPException(
@@ -256,14 +368,21 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
                 detail="No hay rostros registrados en el sistema. Registra tu rostro primero ingresando tu correo. 📷"
             )
 
-        # Deserializar todos los encodings de la base de datos
+        # Deserializar todos los encodings de todos los usuarios
         encodings_conocidos = []
         usuarios_validos = []
         for u in usuarios_con_rostro:
             try:
                 enc_lista = json.loads(u.face_encoding)
-                encodings_conocidos.append(np.array(enc_lista))
-                usuarios_validos.append(u)
+                if isinstance(enc_lista[0], (int, float)):
+                    # Formato legacy
+                    encodings_conocidos.append(np.array(enc_lista))
+                    usuarios_validos.append(u)
+                else:
+                    # Multi-template
+                    for enc in enc_lista:
+                        encodings_conocidos.append(np.array(enc))
+                        usuarios_validos.append(u)
             except Exception:
                 continue
 
@@ -286,9 +405,30 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
         idx_minimo = np.argmin(distancias)
         distancia_minima = distancias[idx_minimo]
 
-        # Umbral estándar de face_recognition: 0.6. Usamos 0.58 para mayor seguridad.
-        if distancia_minima <= 0.58:
+        # Umbral estándar de face_recognition: 0.6.
+        if distancia_minima <= 0.60:
             usuario_autenticado = usuarios_validos[idx_minimo]
+            
+            # Guardar la imagen localmente como respaldo físico
+            guardar_imagen_rostro_local(usuario_autenticado.id, datos.imagen_base64)
+            
+            # Aprendizaje adaptativo: agregar el nuevo rostro a la lista de plantillas de este usuario
+            try:
+                enc_lista = json.loads(usuario_autenticado.face_encoding)
+                if isinstance(enc_lista[0], (int, float)):
+                    enc_lista = [enc_lista]
+                
+                # Comprobar si es muy similar a las suyas propias para evitar redundancia
+                sus_encodings = [np.array(enc) for enc in enc_lista]
+                propias_distancias = face_recognition.face_distance(sus_encodings, encoding_login)
+                
+                if len(propias_distancias) == 0 or np.min(propias_distancias) > 0.22:
+                    enc_lista.append(encoding_login.tolist())
+                    if len(enc_lista) > 5:
+                        enc_lista.pop(0)
+                    usuario_autenticado.face_encoding = json.dumps(enc_lista)
+            except Exception:
+                pass
             
             # Actualizar racha y último acceso
             usuario_autenticado.ultimo_acceso = datetime.utcnow()

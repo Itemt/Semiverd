@@ -13,13 +13,6 @@ export class MapView {
     this.container.innerHTML = '';
 
     misiones.forEach((m, i) => {
-      // Dibujar conector (excepto para la primera misión)
-      if (i > 0) {
-        const conector = document.createElement('div');
-        conector.className = 'mapa-connector';
-        this.container.appendChild(conector);
-      }
-
       // Mapear estados a clases de estilo
       const estadoNodo = {
         completada:  'completado',
@@ -29,7 +22,7 @@ export class MapView {
       }[m.estado] || 'bloqueado';
 
       const parada = document.createElement('div');
-      parada.className = 'mapa-parada';
+      parada.className = `mapa-parada ${i % 2 === 1 ? 'parada-par' : ''}`;
       
       if (m.estado !== 'bloqueada') {
         parada.addEventListener('click', () => onNodeClick(m.id));

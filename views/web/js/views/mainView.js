@@ -25,6 +25,10 @@ export class MainView {
 
     if (pantalla === 'login') {
       this.pantallaLogin.classList.remove('oculta');
+      // Limpiar estados de sidebar al ir al login
+      this.sidebar.classList.remove('abierto');
+      this.pantallaApp.classList.remove('sidebar-abierto');
+      this.overlay.classList.remove('visible');
     } else if (pantalla === 'app') {
       this.pantallaApp.classList.remove('oculta');
     }
@@ -32,7 +36,15 @@ export class MainView {
 
   toggleSidebar() {
     const abierto = this.sidebar.classList.toggle('abierto');
-    this.overlay.classList.toggle('visible', abierto);
+    this.pantallaApp.classList.toggle('sidebar-abierto', abierto);
+    
+    // El overlay solo aplica en pantallas pequeñas (móvil/tablet < 1024px)
+    if (window.innerWidth < 1024) {
+      this.overlay.classList.toggle('visible', abierto);
+    } else {
+      this.overlay.classList.remove('visible');
+    }
+
     // Animar hamburguesa
     if (this.btnHamburguesa) {
       this.btnHamburguesa.classList.toggle('hamburguesa-activo', abierto);
@@ -40,10 +52,15 @@ export class MainView {
   }
 
   cerrarSidebar() {
-    this.sidebar.classList.remove('abierto');
-    this.overlay.classList.remove('visible');
-    if (this.btnHamburguesa) {
-      this.btnHamburguesa.classList.remove('hamburguesa-activo');
+    // En desktop (>= 1024px) no colapsamos el sidebar al navegar.
+    // Solo lo cerramos en pantallas móviles/tabletas.
+    if (window.innerWidth < 1024) {
+      this.sidebar.classList.remove('abierto');
+      this.pantallaApp.classList.remove('sidebar-abierto');
+      this.overlay.classList.remove('visible');
+      if (this.btnHamburguesa) {
+        this.btnHamburguesa.classList.remove('hamburguesa-activo');
+      }
     }
   }
 
