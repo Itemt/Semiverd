@@ -1,5 +1,8 @@
 name: Build and Release
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -8,6 +11,9 @@ on:
 jobs:
   build:
     name: Build for ${{ matrix.os }}
+permissions:
+  contents: write
+
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -28,6 +34,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
+permissions:
+  contents: write
+
           python-version: '3.10'
 
       - name: Install macOS specific packages
