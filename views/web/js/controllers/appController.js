@@ -147,7 +147,10 @@ export class AppController {
     document.querySelector('.modal-cerrar').addEventListener('click', () => this.missionView.cerrarModal());
     document.querySelector('.modal-backdrop').addEventListener('click', () => this.missionView.cerrarModal());
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.missionView.cerrarModal();
+      if (e.key === 'Escape') {
+        this.missionView.cerrarModal();
+        this.academiaView.cerrarModal();
+      }
     });
 
     // Perfil: editar nombre
@@ -337,7 +340,7 @@ export class AppController {
         this.treeView.dibujarArbol(this.model.usuario.nivel_arbol);
         break;
       case 'camino':
-        this.mapView.renderMapa(this.model.misiones, (id) => this.abrirDetalleMision(id));
+        this.mapView.renderMapa(this.model.misiones, (id) => this.abrirDetalleMision(id), this.model.usuario);
         break;
       case 'misiones':
         this.missionView.renderMisiones(this.model.misiones, (id) => this.abrirDetalleMision(id));
@@ -380,7 +383,7 @@ export class AppController {
       if (this.model.vistaActual === 'misiones') {
         this.missionView.renderMisiones(this.model.misiones, (id) => this.abrirDetalleMision(id));
       } else if (this.model.vistaActual === 'camino') {
-        this.mapView.renderMapa(this.model.misiones, (id) => this.abrirDetalleMision(id));
+        this.mapView.renderMapa(this.model.misiones, (id) => this.abrirDetalleMision(id), this.model.usuario);
       } else {
         this.irA(this.model.vistaActual);
       }
@@ -402,7 +405,7 @@ export class AppController {
       if (this.model.vistaActual === 'misiones') {
         this.missionView.renderMisiones(this.model.misiones, (id) => this.abrirDetalleMision(id));
       } else if (this.model.vistaActual === 'camino') {
-        this.mapView.renderMapa(this.model.misiones, (id) => this.abrirDetalleMision(id));
+        this.mapView.renderMapa(this.model.misiones, (id) => this.abrirDetalleMision(id), this.model.usuario);
       } else {
         this.irA(this.model.vistaActual);
       }

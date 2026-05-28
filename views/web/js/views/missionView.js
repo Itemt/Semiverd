@@ -88,8 +88,16 @@ export class MissionView {
     // Renderizar imágenes de los personajes
     if (this.modalPersonajes) {
       this.modalPersonajes.innerHTML = '';
+      const dialogoLayout = document.getElementById('modal-personaje-dialogo');
+      const spriteImg = document.getElementById('modal-personaje-sprite');
+      const dialogoTexto = document.getElementById('modal-personaje-dialogo-texto');
+      
+      if (dialogoLayout) {
+        dialogoLayout.classList.add('oculto');
+      }
+
       if (m.imagenes_personajes && m.imagenes_personajes.length > 0) {
-        m.imagenes_personajes.forEach(imgUrl => {
+        m.imagenes_personajes.forEach((imgUrl, idx) => {
           const img = document.createElement('img');
           img.src = imgUrl;
           img.alt = 'Personaje';
@@ -104,7 +112,31 @@ export class MissionView {
           else if (lower.includes('maria sofia') || lower.includes('sofia')) nombre = 'Sofía';
           
           img.title = nombre;
+          
+          // Al hacer clic, mostrar mensaje y sprite grande sin corte
+          img.addEventListener('click', () => {
+            // Quitar clase activa
+            this.modalPersonajes.querySelectorAll('.modal-personaje-img').forEach(el => el.classList.remove('activo'));
+            img.classList.add('activo');
+            
+            // Mostrar diálogo
+            if (dialogoLayout && dialogoTexto && spriteImg) {
+              const msg = this.getMensajePersonaje(nombre, imgUrl);
+              spriteImg.src = imgUrl;
+              spriteImg.alt = nombre;
+              dialogoTexto.innerHTML = `<strong>${nombre}:</strong> "${msg}"`;
+              dialogoLayout.classList.remove('oculto');
+            }
+          });
+
           this.modalPersonajes.appendChild(img);
+
+          // Activar el primero por defecto
+          if (idx === 0) {
+            setTimeout(() => {
+              img.click();
+            }, 50);
+          }
         });
         this.modalPersonajes.style.display = 'flex';
       } else {
@@ -143,6 +175,51 @@ export class MissionView {
 
     this.modal.classList.remove('oculto');
     document.body.style.overflow = 'hidden';
+  }
+
+  getMensajePersonaje(nombre, imgUrl) {
+    const name = nombre.toLowerCase();
+    const url = imgUrl.toLowerCase();
+    
+    if (name.includes('juliana')) {
+      if (url.includes('hecho') || url.includes('proponiendo')) {
+        return "¡Hagamos que el Río Magdalena vuelva a brillar! Cada acción cuenta para descontaminar nuestras aguas. 💧✨";
+      } else if (url.includes('esperando')) {
+        return "El agua no espera, ¡los cambios deben iniciar hoy! ¿Listo para proteger el humedal? 🌊";
+      } else if (url.includes('creando')) {
+        return "¡Ideemos soluciones creativas para proteger la ciénaga y el río! 🌿🔬";
+      }
+      return "¡El agua limpia es vida y dignidad para Barrancabermeja! Cuidémosla juntos. 💚";
+    }
+    
+    if (name.includes('giohan')) {
+      if (url.includes('hecho') || url.includes('decidido')) {
+        return "¡Eso es! Logramos reducir residuos y limpiar espacios. ¡Jugamos limpio por el planeta! ⚽♻️";
+      } else if (url.includes('asignandotarea') || url.includes('investigando')) {
+        return "Tenemos una nueva tarea ecológica. ¡Trabajemos en equipo para ganar este partido ambiental! 🤝";
+      }
+      return "¡La basura de unos es el tesoro de otros! A reutilizar y reciclar con toda la energía. 🗑️⚡";
+    }
+    
+    if (name.includes('camila')) {
+      if (url.includes('hecho') || url.includes('creando')) {
+        return "¡Qué alegría ver brotar nuevas hojas! Cada árbol plantado limpia nuestro aire en Barranca. 🌳🌸";
+      } else if (url.includes('pensando') || url.includes('investigando')) {
+        return "Me pregunto... ¿cómo podemos mejorar la siembra de árboles hoy? ¡Las plantas aman los cuidados! 🍂";
+      }
+      return "¡Cuidar de la tierra es sembrar nuestro propio futuro! Seamos amigos de los árboles. 🌿";
+    }
+    
+    if (name.includes('sofía') || name.includes('sofia')) {
+      if (url.includes('hecho') || url.includes('decidido')) {
+        return "¡Meta cumplida! Ahorrar energía es clave para mitigar el cambio climático. ⚡☀️";
+      } else if (url.includes('inconforme') || url.includes('triste') || url.includes('cleanshot')) {
+        return "Me preocupa el desperdicio de recursos... ¡Pero no nos rindamos! Podemos optimizar nuestro consumo. 📉💚";
+      }
+      return "¡El sol de Barrancabermeja es nuestra mayor fuente de energía limpia! Aprovechémosla con inteligencia. ☀️🔌";
+    }
+    
+    return "¡Juntos podemos transformar a Barrancabermeja en una ecociudad ejemplar! 🌳✨";
   }
 
   cerrarModal() {

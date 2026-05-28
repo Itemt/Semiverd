@@ -105,6 +105,12 @@ export class StateModel {
 
     const respuesta = await fetch(`${API_BASE}${ruta}`, opciones);
 
+    if (respuesta.status === 401) {
+      this.cerrarSesion();
+      window.location.reload();
+      throw new Error("Sesión expirada. Por favor, ingresa de nuevo.");
+    }
+
     if (!respuesta.ok) {
       const error = await respuesta.json().catch(() => ({ detail: 'Error desconocido' }));
       throw new Error(error.detail || `Error ${respuesta.status}`);
@@ -245,6 +251,14 @@ export class StateModel {
         this.usuario.monedas_verdes += m.monedas_recompensa;
         this.usuario.nivel_arbol = this.calcularNivelArbol(this.usuario.puntos_totales);
 
+        // Recalcular nivel del usuario
+        let n = 'Semilla';
+        if (this.usuario.puntos_totales >= 1200) n = 'Maestro del Bosque';
+        else if (this.usuario.puntos_totales >= 700) n = 'Guardián';
+        else if (this.usuario.puntos_totales >= 350) n = 'Árbol';
+        else if (this.usuario.puntos_totales >= 100) n = 'Brote';
+        this.usuario.nivel = n;
+
         // Desbloquear la siguiente misión
         const siguiente = this.misiones.find(x => x.orden === m.orden + 1);
         if (siguiente && siguiente.estado === 'bloqueada') {
@@ -254,6 +268,7 @@ export class StateModel {
       return {
         puntos_ganados: m?.puntos_recompensa || 0,
         puntos_totales: this.usuario.puntos_totales,
+        nivel: this.usuario.nivel,
         nivel_arbol: this.usuario.nivel_arbol
       };
     }

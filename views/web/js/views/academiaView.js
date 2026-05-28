@@ -6,6 +6,51 @@
 export class AcademiaView {
   constructor() {
     this.container = document.getElementById('tips-lista');
+    this.modal = document.getElementById('modal-tip');
+    
+    if (this.modal) {
+      this.modalIcono = document.getElementById('modal-tip-icono');
+      this.modalTitulo = document.getElementById('modal-tip-titulo');
+      this.modalCategoria = document.getElementById('modal-tip-categoria');
+      this.modalAutor = document.getElementById('modal-tip-autor');
+      this.modalContenido = document.getElementById('modal-tip-contenido');
+      
+      // Hook closing actions
+      const btnCerrar = this.modal.querySelector('.modal-cerrar');
+      if (btnCerrar) {
+        btnCerrar.addEventListener('click', () => this.cerrarModal());
+      }
+      
+      const btnEntendido = this.modal.querySelector('.modal-cerrar-btn');
+      if (btnEntendido) {
+        btnEntendido.addEventListener('click', () => this.cerrarModal());
+      }
+      
+      const backdrop = this.modal.querySelector('.modal-backdrop');
+      if (backdrop) {
+        backdrop.addEventListener('click', () => this.cerrarModal());
+      }
+    }
+  }
+
+  abrirModal(tip) {
+    if (!this.modal || !tip) return;
+    
+    this.modalIcono.textContent = tip.icono_emoji || '💡';
+    this.modalTitulo.textContent = tip.titulo || '';
+    this.modalCategoria.textContent = (tip.categoria || 'Academia').toUpperCase();
+    this.modalAutor.textContent = tip.guardian_autor ? `Recomendado por: ${tip.guardian_autor} 💚` : '';
+    this.modalContenido.textContent = tip.contenido || '';
+    
+    this.modal.classList.remove('oculto');
+    document.body.style.overflow = 'hidden';
+  }
+
+  cerrarModal() {
+    if (this.modal) {
+      this.modal.classList.add('oculto');
+      document.body.style.overflow = '';
+    }
   }
 
   renderTips(tips, categoriaSeleccionada = null) {
@@ -21,20 +66,17 @@ export class AcademiaView {
       const card = document.createElement('div');
       card.className = 'tip-card';
       card.style.animationDelay = `${i * 0.05}s`;
+      card.style.cursor = 'pointer';
       card.innerHTML = `
         <div class="tip-card-icono">${tip.icono_emoji}</div>
         <div class="tip-card-titulo">${tip.titulo}</div>
         <div class="tip-card-contenido">${tip.contenido}</div>
         ${tip.guardian_autor ? `<div class="tip-card-guardian">💚 ${tip.guardian_autor}</div>` : ''}
-        <div class="tip-card-expand-btn">Leer más 🗺️</div>
+        <div class="tip-card-expand-btn">Ver consejo 🔍</div>
       `;
 
       card.addEventListener('click', () => {
-        const esExpandido = card.classList.toggle('expandida');
-        const btn = card.querySelector('.tip-card-expand-btn');
-        if (btn) {
-          btn.textContent = esExpandido ? 'Cerrar ✕' : 'Leer más 🗺️';
-        }
+        this.abrirModal(tip);
       });
 
       this.container.appendChild(card);
@@ -65,5 +107,16 @@ export class AcademiaView {
     
     const guardian = document.getElementById('tip-dia-guardian');
     if (guardian && tip.guardian_autor) guardian.textContent = `💚 ${tip.guardian_autor}`;
+
+    // Configurar clic en la tarjeta del consejo del día
+    const card = document.querySelector('.card-tip-dia');
+    if (card) {
+      const newCard = card.cloneNode(true);
+      if (card.parentNode) {
+        card.parentNode.replaceChild(newCard, card);
+      }
+      newCard.style.cursor = 'pointer';
+      newCard.addEventListener('click', () => this.abrirModal(tip));
+    }
   }
 }

@@ -215,20 +215,28 @@
         </div>
       </div>
       <ul class="sidebar-menu">
-        <li><button onclick="irA('inicio')" class="sidebar-item activo" id="nav-inicio"><span class="sidebar-icon">🏠</span> <span class="sidebar-text">Inicio</span></button></li>
-        <li><button onclick="irA('arbol')" class="sidebar-item" id="nav-arbol"><span class="sidebar-icon">🌳</span> <span class="sidebar-text">Mi Árbol</span></button></li>
-        <li><button onclick="irA('camino')" class="sidebar-item" id="nav-camino"><span class="sidebar-icon">🗺️</span> <span class="sidebar-text">El Camino</span></button></li>
-        <li><button onclick="irA('misiones')" class="sidebar-item" id="nav-misiones"><span class="sidebar-icon">⚔️</span> <span class="sidebar-text">Misiones</span></button></li>
-        <li><button onclick="irA('academia')" class="sidebar-item" id="nav-academia"><span class="sidebar-icon">🎓</span> <span class="sidebar-text">Academia</span></button></li>
-        <li><button onclick="irA('ranking')" class="sidebar-item" id="nav-ranking"><span class="sidebar-icon">🏆</span> <span class="sidebar-text">Ranking</span></button></li>
-        <li><button onclick="irA('perfil')" class="sidebar-item" id="nav-perfil"><span class="sidebar-icon">👤</span> <span class="sidebar-text">Mi Perfil</span></button></li>
+        <li><button onclick="irA('inicio')" class="sidebar-item activo" id="nav-inicio"><span
+              class="sidebar-icon">🏠</span> <span class="sidebar-text">Inicio</span></button></li>
+        <li><button onclick="irA('arbol')" class="sidebar-item" id="nav-arbol"><span class="sidebar-icon">🌳</span>
+            <span class="sidebar-text">Mi Árbol</span></button></li>
+        <li><button onclick="irA('camino')" class="sidebar-item" id="nav-camino"><span class="sidebar-icon">🗺️</span>
+            <span class="sidebar-text">El Camino</span></button></li>
+        <li><button onclick="irA('misiones')" class="sidebar-item" id="nav-misiones"><span
+              class="sidebar-icon">⚔️</span> <span class="sidebar-text">Misiones</span></button></li>
+        <li><button onclick="irA('academia')" class="sidebar-item" id="nav-academia"><span
+              class="sidebar-icon">🎓</span> <span class="sidebar-text">Academia</span></button></li>
+        <li><button onclick="irA('ranking')" class="sidebar-item" id="nav-ranking"><span class="sidebar-icon">🏆</span>
+            <span class="sidebar-text">Ranking</span></button></li>
+        <li><button onclick="irA('perfil')" class="sidebar-item" id="nav-perfil"><span class="sidebar-icon">👤</span>
+            <span class="sidebar-text">Mi Perfil</span></button></li>
       </ul>
       <div class="sidebar-footer">
         <button class="sidebar-theme-btn btn-toggle-tema" id="btn-toggle-tema-sidebar"
           aria-label="Cambiar modo claro/oscuro" title="Cambiar tema">
           🌙
         </button>
-        <button class="sidebar-logout" onclick="cerrarSesion()"><span class="sidebar-icon">🚪</span> <span class="sidebar-text">Salir</span></button>
+        <button class="sidebar-logout" onclick="cerrarSesion()"><span class="sidebar-icon">🚪</span> <span
+            class="sidebar-text">Salir</span></button>
       </div>
     </nav>
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -362,6 +370,13 @@
           <div class="modal-zona-badge" id="modal-mision-zona"></div>
           <p class="modal-guardianes" id="modal-mision-guardianes"></p>
           <div class="modal-personajes" id="modal-mision-personajes"></div>
+          <div id="modal-personaje-dialogo" class="personaje-dialogo-layout oculto">
+            <img id="modal-personaje-sprite" class="personaje-sprite" src="" alt="Personaje">
+            <div class="personaje-globo">
+              <span class="globo-flecha"></span>
+              <p id="modal-personaje-dialogo-texto"></p>
+            </div>
+          </div>
           <p class="modal-descripcion" id="modal-mision-descripcion"></p>
           <div class="modal-recompensas">
             <div class="recompensa-item">
@@ -381,6 +396,25 @@
           </div>
           <div class="modal-acciones" id="modal-acciones">
             <!-- Botones dinámicos -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── MODAL: DETALLE DE CONSEJO (TIP) ───────────── -->
+      <div id="modal-tip" class="modal oculto">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+          <button class="modal-cerrar">✕</button>
+          <div class="modal-icono" id="modal-tip-icono">💡</div>
+          <h2 class="modal-titulo" id="modal-tip-titulo"></h2>
+          <div class="modal-zona-badge" id="modal-tip-categoria"
+            style="text-align: center; margin: 0 auto 12px; display: table;"></div>
+          <p class="modal-guardianes" id="modal-tip-autor"
+            style="text-align: center; margin-bottom: 20px; font-weight: 500;"></p>
+          <p class="modal-descripcion" id="modal-tip-contenido"
+            style="text-align: center; font-size: 1.05rem; line-height: 1.6;"></p>
+          <div class="modal-acciones" style="display: flex; justify-content: center; margin-top: 24px;">
+            <button class="btn-secondary modal-cerrar-btn">Entendido 🌿</button>
           </div>
         </div>
       </div>

@@ -280,7 +280,7 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
             if not usuario.face_encoding:
                 sincronizar_encodings_desde_disco(usuario, db)
 
-            if usuario.face_encoding:
+            if usuario.face_encoding and usuario.face_encoding != "[]":
                 try:
                     enc_lista = json.loads(usuario.face_encoding)
                     
@@ -317,9 +317,49 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
                     # Si el JSON está corrupto, permitimos re-vincular de cero
                     usuario.face_encoding = json.dumps([encoding_login.tolist()])
                     guardar_imagen_rostro_local(usuario.id, datos.imagen_base64)
+            else:
+                # El usuario existe pero NO tiene rostro registrado (cuenta tradicional)
+                # Impedimos vincularlo sin autenticación (seguridad contra usurpación de identidad)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Este correo ya está registrado en Semiverd. Por favor, inicia sesión con tu contraseña tradicional primero y vincula tu rostro desde tu perfil. 🔐"
+                )
 
         # Si no existe, auto-registrar con los datos proporcionados
         if not usuario:
+            # Evitar registrar una cara que ya pertenece a otro correo
+            todos_usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
+            for u in todos_usuarios:
+                if not u.face_encoding:
+                    sincronizar_encodings_desde_disco(u, db)
+
+            usuarios_con_rostro = [u for u in todos_usuarios if u.face_encoding]
+
+            encodings_conocidos = []
+            usuarios_validos = []
+            for u in usuarios_con_rostro:
+                try:
+                    enc_lista = json.loads(u.face_encoding)
+                    if isinstance(enc_lista[0], (int, float)):
+                        encodings_conocidos.append(np.array(enc_lista))
+                        usuarios_validos.append(u)
+                    else:
+                        for enc in enc_lista:
+                            encodings_conocidos.append(np.array(enc))
+                            usuarios_validos.append(u)
+                except Exception:
+                    continue
+
+            if encodings_conocidos:
+                distancias = face_recognition.face_distance(encodings_conocidos, encoding_login)
+                if len(distancias) > 0 and np.min(distancias) <= 0.60:
+                    idx_coincidente = np.argmin(distancias)
+                    usuario_duplicado = usuarios_validos[idx_coincidente]
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Este rostro ya está registrado con otra cuenta de correo ({usuario_duplicado.correo}). 📷"
+                    )
+
             nombre_usuario = datos.nombre or datos.correo.split("@")[0].capitalize()
             # Generar una contraseña aleatoria segura (el usuario usará Face ID)
             import secrets

@@ -17,6 +17,21 @@ export class MainView {
     // Vistas principales
     this.pantallaLogin = document.getElementById('pantalla-login');
     this.pantallaApp = document.getElementById('pantalla-app');
+
+    // Cerrar sidebar al redimensionar la pantalla (ej. al reducir el ancho)
+    let lastWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        if (this.sidebar && this.sidebar.classList.contains('abierto')) {
+          this.sidebar.classList.remove('abierto');
+          if (this.pantallaApp) this.pantallaApp.classList.remove('sidebar-abierto');
+          if (this.overlay) this.overlay.classList.remove('visible');
+          if (this.btnHamburguesa) this.btnHamburguesa.classList.remove('hamburguesa-activo');
+        }
+        lastWidth = currentWidth;
+      }
+    });
   }
 
   mostrarPantalla(pantalla) {

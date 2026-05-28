@@ -48,14 +48,54 @@ def actualizar_perfil(
         
         # Intentar actualizar el encoding facial (Face ID) si la nueva foto contiene un rostro legible
         try:
-            from controllers.auth_controller import obtener_encoding_facial, guardar_imagen_rostro_local
+            from controllers.auth_controller import obtener_encoding_facial, guardar_imagen_rostro_local, sincronizar_encodings_desde_disco
             import json
+            import numpy as np
+            import face_recognition
+            
             encoding = obtener_encoding_facial(datos.foto_perfil)
+            
+            # Validar que este rostro no esté registrado por otro usuario activo
+            otros_usuarios = db.query(Usuario).filter(Usuario.activo == True, Usuario.id != usuario_actual.id).all()
+            for u in otros_usuarios:
+                if not u.face_encoding:
+                    sincronizar_encodings_desde_disco(u, db)
+                    
+            usuarios_con_rostro = [u for u in otros_usuarios if u.face_encoding]
+            
+            encodings_conocidos = []
+            usuarios_validos = []
+            for u in usuarios_con_rostro:
+                try:
+                    enc_lista = json.loads(u.face_encoding)
+                    if isinstance(enc_lista[0], (int, float)):
+                        encodings_conocidos.append(np.array(enc_lista))
+                        usuarios_validos.append(u)
+                    else:
+                        for enc in enc_lista:
+                            encodings_conocidos.append(np.array(enc))
+                            usuarios_validos.append(u)
+                except Exception:
+                    continue
+                    
+            if encodings_conocidos:
+                distancias = face_recognition.face_distance(encodings_conocidos, encoding)
+                if len(distancias) > 0 and np.min(distancias) <= 0.60:
+                    idx_coincidente = np.argmin(distancias)
+                    usuario_duplicado = usuarios_validos[idx_coincidente]
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Este rostro ya está registrado con otra cuenta de correo ({usuario_duplicado.correo}). 📷"
+                    )
+            
             usuario_actual.face_encoding = json.dumps([encoding.tolist()])
             # Guardar la imagen localmente en la base de datos de rostros
             guardar_imagen_rostro_local(usuario_actual.id, datos.foto_perfil)
+        except HTTPException as he:
+            # Propagar errores de validación específicos (como rostros duplicados)
+            raise he
         except Exception:
-            # Si no hay rostro o falla, no se actualiza el Face ID, solo la foto de perfil en la UI
+            # Si no hay rostro o falla por otra razón, no se actualiza el Face ID, solo la foto de perfil en la UI
             pass
 
     db.commit()
