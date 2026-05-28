@@ -1,30 +1,32 @@
 """
-database.py - Configuración de la conexión a PostgreSQL con SQLAlchemy
+database.py - Configuración de la conexión a SQLite con SQLAlchemy
 Proyecto: Semiverd MVP
 """
 
 import os
+import sys
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
-# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
-# URL de conexión a la base de datos
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5432/semiverd_db"
-)
+# Determinar el directorio base correcto (donde corre el .exe o el script)
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Motor de base de datos con configuración de pool
+# URL de conexión a la base de datos (SQLite local en la misma carpeta)
+DB_PATH = os.path.join(BASE_DIR, "semiverd.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
+
+# Motor de base de datos
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,       # Verifica conexiones antes de usarlas
-    pool_size=10,             # Tamaño del pool de conexiones
-    max_overflow=20,          # Conexiones extras en pico
-    echo=os.getenv("DEBUG", "False").lower() == "true"  # SQL logging en modo debug
+    connect_args={"check_same_thread": False}, # Importante para SQLite en FastAPI
+    echo=os.getenv("DEBUG", "False").lower() == "true"
 )
 
 # Fábrica de sesiones
@@ -34,15 +36,9 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
-# Clase base para los modelos ORM
 Base = declarative_base()
 
-
 def get_db():
-    """
-    Dependencia de FastAPI que provee una sesión de base de datos.
-    Se usa con Depends(get_db) en los endpoints.
-    """
     db = SessionLocal()
     try:
         yield db

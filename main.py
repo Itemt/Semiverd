@@ -4,6 +4,7 @@ Proyecto: Semiverd MVP - Las Cuatro Semillas Verdes de Barrancabermeja
 """
 
 import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +17,17 @@ from controllers import auth_controller, missions_controller, users_controller, 
 
 # Cargar variables de entorno
 load_dotenv()
+
+# Determinar el directorio base (Soporte para PyInstaller)
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Directorios estáticos
+PICTURES_DIR = os.path.join(BASE_DIR, "views", "pictures")
+WEB_DIR = os.path.join(BASE_DIR, "views", "web")
+FAVICON_PATH = os.path.join(WEB_DIR, "favicon.png")
 
 # Crear todas las tablas al iniciar (si no existen)
 models.Base.metadata.create_all(bind=engine)
@@ -33,16 +45,7 @@ app = FastAPI(
 )
 
 # Middleware CORS (permite llamadas desde el frontend)
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:5500",
-    "http://localhost:8000",
-    "http://localhost:8080",
-    "http://127.0.0.1:5500",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:8000",
-]
+origins = ["*"] # Permitir todo para el ejecutable local
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,10 +62,8 @@ app.include_router(users_controller.router)
 app.include_router(tips_controller.router)
 
 
-# Endpoints de API Info y Salud
 @app.get("/api-info", tags=["Raíz"])
 def raiz():
-    """Endpoint de bienvenida de la API Semiverd"""
     return {
         "mensaje": "🌿 Bienvenido a la API de Semiverd",
         "descripcion": "Las Cuatro Semillas Verdes de Barrancabermeja",
@@ -71,33 +72,39 @@ def raiz():
         "estado": "activo"
     }
 
-
 @app.get("/salud", tags=["Raíz"])
 def verificar_salud():
-    """Health check del servidor"""
     return {"estado": "saludable", "servicio": "semiverd-api"}
-
 
 @app.get("/favicon.ico", include_in_schema=False)
 def obtener_favicon():
-    """Retorna el favicon oficial para evitar errores 404 del navegador"""
-    return FileResponse("views/web/favicon.png")
+    if os.path.exists(FAVICON_PATH):
+        return FileResponse(FAVICON_PATH)
+    return {"mensaje": "No favicon"}
 
+# Montar carpetas (si existen)
+if os.path.exists(PICTURES_DIR):
+    app.mount("/pictures", StaticFiles(directory=PICTURES_DIR), name="pictures")
 
-# Montar carpeta de fotos de personajes
-app.mount("/pictures", StaticFiles(directory="views/pictures"), name="pictures")
+if os.path.exists(WEB_DIR):
+    app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
 
-# Montar archivos estáticos para el frontend (servido en la raíz)
-app.mount("/", StaticFiles(directory="views/web", html=True), name="web")
-
-
-# Punto de entrada para desarrollo
 if __name__ == "__main__":
     import uvicorn
+    import webbrowser
+    import threading
+    import time
+    
+    # Abre el navegador automáticamente cuando inicia el ejecutable
+    def open_browser():
+        time.sleep(1.5)
+        webbrowser.open("http://127.0.0.1:8000")
+        
+    threading.Thread(target=open_browser, daemon=True).start()
+    
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=8000,
-        reload=True,
         log_level="info"
     )

@@ -49,7 +49,7 @@ jobs:
       - name: Build with PyInstaller (Windows)
         if: runner.os == 'Windows'
         run: |
-          pyinstaller --onedir --name Semiverd --hidden-import=uvicorn.logging --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.protocols --hidden-import=uvicorn.protocols.http --hidden-import=uvicorn.protocols.http.auto --hidden-import=uvicorn.protocols.websockets --hidden-import=uvicorn.protocols.websockets.auto --hidden-import=uvicorn.lifespan.on --hidden-import=uvicorn.lifespan.off --hidden-import=models.models --hidden-import=models.schemas --hidden-import=psycopg2 main.py
+          pyinstaller --onedir --name Semiverd --icon=icon.ico --hidden-import=uvicorn.logging --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.protocols --hidden-import=uvicorn.protocols.http --hidden-import=uvicorn.protocols.http.auto --hidden-import=uvicorn.protocols.websockets --hidden-import=uvicorn.protocols.websockets.auto --hidden-import=uvicorn.lifespan.on --hidden-import=uvicorn.lifespan.off --hidden-import=models.models --hidden-import=models.schemas --hidden-import=psycopg2 main.py
           Copy-Item -Path "views" -Destination "dist\Semiverd\views" -Recurse
           Copy-Item -Path "faces_db" -Destination "dist\Semiverd\faces_db" -Recurse
           Copy-Item -Path ".env.example" -Destination "dist\Semiverd\.env"
@@ -58,7 +58,7 @@ jobs:
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
         run: |
-          pyinstaller --onedir --windowed --name Semiverd --hidden-import=uvicorn.logging --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.protocols --hidden-import=uvicorn.protocols.http --hidden-import=uvicorn.protocols.http.auto --hidden-import=uvicorn.protocols.websockets --hidden-import=uvicorn.protocols.websockets.auto --hidden-import=uvicorn.lifespan.on --hidden-import=uvicorn.lifespan.off --hidden-import=models.models --hidden-import=models.schemas --hidden-import=psycopg2 --hidden-import=face_recognition main.py
+          pyinstaller --onedir --windowed --name Semiverd --icon=icon.ico --hidden-import=uvicorn.logging --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.protocols --hidden-import=uvicorn.protocols.http --hidden-import=uvicorn.protocols.http.auto --hidden-import=uvicorn.protocols.websockets --hidden-import=uvicorn.protocols.websockets.auto --hidden-import=uvicorn.lifespan.on --hidden-import=uvicorn.lifespan.off --hidden-import=models.models --hidden-import=models.schemas --hidden-import=psycopg2 --hidden-import=face_recognition main.py
           
           # Copiar vistas y db al contenido de la app de Mac (por si arranca empaquetada)
           cp -r views dist/Semiverd.app/Contents/MacOS/
