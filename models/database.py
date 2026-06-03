@@ -10,8 +10,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Determinar el directorio base correcto (donde corre el .exe o el script)
 if getattr(sys, 'frozen', False):
     executable_dir = os.path.dirname(sys.executable)
@@ -21,8 +19,13 @@ if getattr(sys, 'frozen', False):
         BASE_DIR = os.path.dirname(app_path)
     else:
         BASE_DIR = executable_dir
+    
+    # Cargar variables de entorno del archivo .env al lado del ejecutable
+    env_path = os.path.join(BASE_DIR, ".env")
+    load_dotenv(env_path)
 else:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    load_dotenv()
 
 # URL de conexión a la base de datos (SQLite local en la misma carpeta)
 DB_PATH = os.path.join(BASE_DIR, "semiverd.db")
@@ -36,7 +39,24 @@ engine_kwargs = {
 if DATABASE_URL.startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}  # Importante para SQLite en FastAPI
 
-engine = create_engine(DATABASE_URL, **engine_kwargs)
+# Intentar conectar y crear motor, con fallback a SQLite si falla
+try:
+    engine = create_engine(DATABASE_URL, **engine_kwargs)
+    # Probar conexión para validar que funcione el host/puerto de base de datos externa
+    with engine.connect() as conn:
+        pass
+except Exception as e:
+    # Si la URL configurada no es SQLite y falla la conexión, retrocedemos a SQLite local
+    if not DATABASE_URL.startswith("sqlite"):
+        print(f"\n⚠️ Advertencia: No se pudo conectar a la base de datos configurada ({DATABASE_URL.split('@')[-1]}).")
+        print(f"Error original: {e}")
+        print("🔄 Cambiando automáticamente a la base de datos SQLite de respaldo (semiverd.db)...\n")
+        DATABASE_URL = f"sqlite:///{DB_PATH}"
+        engine_kwargs["connect_args"] = {"check_same_thread": False}
+        engine = create_engine(DATABASE_URL, **engine_kwargs)
+    else:
+        # Si es SQLite y falló, lanzar excepción
+        raise e
 
 # Fábrica de sesiones
 SessionLocal = sessionmaker(

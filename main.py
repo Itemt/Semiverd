@@ -5,17 +5,10 @@ Proyecto: Semiverd MVP - Las Cuatro Semillas Verdes de Barrancabermeja
 
 import os
 import sys
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+import traceback
 from dotenv import load_dotenv
 
-from models.database import engine
-from models import models
-from controllers import auth_controller, missions_controller, users_controller, tips_controller
-
-# Cargar variables de entorno
+# Cargar variables de entorno lo antes posible para configurar la app
 if getattr(sys, 'frozen', False):
     # En producción (congelado), buscar el .env en la misma carpeta que el archivo ejecutable real
     executable_dir = os.path.dirname(sys.executable)
@@ -27,6 +20,24 @@ if getattr(sys, 'frozen', False):
     load_dotenv(env_path)
 else:
     load_dotenv()
+
+# Intentar importar dependencias crítcas y controladores
+try:
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    from models.database import engine
+    from models import models
+    from controllers import auth_controller, missions_controller, users_controller, tips_controller
+except Exception as e:
+    print("\n❌ ERROR CRÍTICO AL IMPORTAR DEPENDENCIAS O INICIALIZAR MÓDULOS:")
+    traceback.print_exc()
+    print("\nEste error suele ocurrir si faltan librerías o dependencias del sistema.")
+    if getattr(sys, 'frozen', False):
+        input("\nPresione Enter para salir...")
+    sys.exit(1)
 
 # Determinar el directorio base para activos estáticos (Soporte para PyInstaller)
 if getattr(sys, 'frozen', False):
@@ -41,7 +52,15 @@ WEB_DIR = os.path.join(BASE_DIR, "views", "web")
 FAVICON_PATH = os.path.join(WEB_DIR, "favicon.png")
 
 # Crear todas las tablas al iniciar (si no existen)
-models.Base.metadata.create_all(bind=engine)
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print("\n❌ ERROR AL INICIALIZAR LA BASE DE DATOS:")
+    traceback.print_exc()
+    print("\nPor favor, verifica la configuración de tu archivo .env y la conexión a la base de datos.")
+    if getattr(sys, 'frozen', False):
+        input("\nPresione Enter para salir...")
+    sys.exit(1)
 
 app = FastAPI(
     title="🌱 Semiverd API",
