@@ -18,9 +18,9 @@ jobs:
           - os: windows-latest
             artifact_name: Semiverd-Windows-x64.zip
           - os: macos-13
-            artifact_name: Semiverd-macOS-x64.zip
+            artifact_name: Semiverd-macOS-x64.dmg
           - os: macos-14
-            artifact_name: Semiverd-macOS-arm64.zip
+            artifact_name: Semiverd-macOS-arm64.dmg
     
     steps:
       - uses: actions/checkout@v4
@@ -51,11 +51,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          pyinstaller --onefile --name Semiverd --icon=icon.ico --hidden-import=uvicorn.logging --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.protocols --hidden-import=uvicorn.protocols.http --hidden-import=uvicorn.protocols.http.auto --hidden-import=uvicorn.protocols.websockets --hidden-import=uvicorn.protocols.websockets.auto --hidden-import=uvicorn.lifespan.on --hidden-import=uvicorn.lifespan.off --hidden-import=models.models --hidden-import=models.schemas --hidden-import=psycopg2 main.py
+          python -m PyInstaller Semiverd.spec
           mkdir dist\Release
           move dist\Semiverd.exe dist\Release\
-          xcopy views dist\Release\views /E /I /H /Y
-          xcopy faces_db dist\Release\faces_db /E /I /H /Y
           copy .env.example dist\Release\.env
           cd dist\Release
           tar -a -c -f ..\..\${{ matrix.artifact_name }} *
@@ -63,15 +61,10 @@ jobs:
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'
         run: |
-          pyinstaller --onedir --windowed --name Semiverd --icon=icon.ico --hidden-import=uvicorn.logging --hidden-import=uvicorn.loops --hidden-import=uvicorn.loops.auto --hidden-import=uvicorn.protocols --hidden-import=uvicorn.protocols.http --hidden-import=uvicorn.protocols.http.auto --hidden-import=uvicorn.protocols.websockets --hidden-import=uvicorn.protocols.websockets.auto --hidden-import=uvicorn.lifespan.on --hidden-import=uvicorn.lifespan.off --hidden-import=models.models --hidden-import=models.schemas --hidden-import=psycopg2 --hidden-import=face_recognition main.py
-          
-          mkdir -p dist/Release
-          cp -r dist/Semiverd.app dist/Release/
-          cp -r views dist/Release/
-          cp -r faces_db dist/Release/ || true
-          cp .env.example dist/Release/.env || true
-          
-          cd dist/Release && zip -r "../../${{ matrix.artifact_name }}" *
+          python -m PyInstaller Semiverd.spec
+          mkdir -p dist/dmg_src
+          cp -r dist/Semiverd.app dist/dmg_src/
+          hdiutil create -fs HFS+ -srcfolder dist/dmg_src -volname "Semiverd" -format UDZO "${{ matrix.artifact_name }}"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

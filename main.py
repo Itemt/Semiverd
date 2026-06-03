@@ -16,11 +16,22 @@ from models import models
 from controllers import auth_controller, missions_controller, users_controller, tips_controller
 
 # Cargar variables de entorno
-load_dotenv()
-
-# Determinar el directorio base (Soporte para PyInstaller)
 if getattr(sys, 'frozen', False):
-    BASE_DIR = os.path.dirname(sys.executable)
+    # En producción (congelado), buscar el .env en la misma carpeta que el archivo ejecutable real
+    executable_dir = os.path.dirname(sys.executable)
+    if ".app/Contents/MacOS" in executable_dir:
+        # En macOS dentro del .app bundle, subir niveles para encontrar el .env al lado del .app
+        app_path = executable_dir.split(".app/Contents/MacOS")[0] + ".app"
+        executable_dir = os.path.dirname(app_path)
+    env_path = os.path.join(executable_dir, ".env")
+    load_dotenv(env_path)
+else:
+    load_dotenv()
+
+# Determinar el directorio base para activos estáticos (Soporte para PyInstaller)
+if getattr(sys, 'frozen', False):
+    # sys._MEIPASS contiene la carpeta temporal donde PyInstaller extrae los activos empaquetados
+    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -103,7 +114,7 @@ if __name__ == "__main__":
     threading.Thread(target=open_browser, daemon=True).start()
     
     uvicorn.run(
-        "main:app",
+        app,
         host="127.0.0.1",
         port=8000,
         log_level="info"

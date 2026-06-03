@@ -14,7 +14,13 @@ load_dotenv()
 
 # Determinar el directorio base correcto (donde corre el .exe o el script)
 if getattr(sys, 'frozen', False):
-    BASE_DIR = os.path.dirname(sys.executable)
+    executable_dir = os.path.dirname(sys.executable)
+    if ".app/Contents/MacOS" in executable_dir:
+        # En macOS dentro del .app bundle, subir niveles para colocar la base de datos al lado de la app
+        app_path = executable_dir.split(".app/Contents/MacOS")[0] + ".app"
+        BASE_DIR = os.path.dirname(app_path)
+    else:
+        BASE_DIR = executable_dir
 else:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -23,11 +29,14 @@ DB_PATH = os.path.join(BASE_DIR, "semiverd.db")
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
 
 # Motor de base de datos
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}, # Importante para SQLite en FastAPI
-    echo=os.getenv("DEBUG", "False").lower() == "true"
-)
+engine_kwargs = {
+    "echo": os.getenv("DEBUG", "False").lower() == "true"
+}
+
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}  # Importante para SQLite en FastAPI
+
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 
 # Fábrica de sesiones
 SessionLocal = sessionmaker(

@@ -26,3 +26,8 @@ htmlcov/
 *.sln
 # User generated pictures
 views/pictures/
+faces_db/
+
+# PyInstaller build directories
+build/
+dist/

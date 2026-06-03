@@ -53,7 +53,8 @@ def actualizar_perfil(
             import numpy as np
             import face_recognition
             
-            encoding = obtener_encoding_facial(datos.foto_perfil)
+            # Obtener encoding con alta precisión (num_jitters=3) para la base de datos
+            encoding = obtener_encoding_facial(datos.foto_perfil, num_jitters=3)
             
             # Validar que este rostro no esté registrado por otro usuario activo
             otros_usuarios = db.query(Usuario).filter(Usuario.activo == True, Usuario.id != usuario_actual.id).all()
@@ -79,8 +80,9 @@ def actualizar_perfil(
                     continue
                     
             if encodings_conocidos:
+                # Usar umbral más estricto de 0.58 para comprobar duplicados
                 distancias = face_recognition.face_distance(encodings_conocidos, encoding)
-                if len(distancias) > 0 and np.min(distancias) <= 0.60:
+                if len(distancias) > 0 and np.min(distancias) <= 0.58:
                     idx_coincidente = np.argmin(distancias)
                     usuario_duplicado = usuarios_validos[idx_coincidente]
                     raise HTTPException(
