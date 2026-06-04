@@ -96,7 +96,7 @@ try:
         for f in files:
             full = os.path.join(root, f)
             rel  = os.path.relpath(full, os.path.dirname(webview_path))
-            a.datas.append((full, os.path.dirname(rel)))
+            a.datas.append((rel, full, 'DATA'))
 except Exception as e:
     print(f"Advertencia: no se pudieron incluir los datos de pywebview: {e}")
 
