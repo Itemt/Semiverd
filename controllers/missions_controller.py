@@ -53,13 +53,13 @@ def resolver_imagenes_mision(guardianes: str, estado: str) -> List[str]:
                 imagenes.append("/pictures/camila/CAMILARESUELTO.png")
         elif "sofía" in nombre.lower() or "sofia" in nombre.lower():
             if estado == "bloqueada":
-                imagenes.append("/pictures/maria sofia/SOFIATRISTE.png")
+                imagenes.append("/pictures/mariasofia/SOFIATRISTE.png")
             elif estado == "disponible":
-                imagenes.append("/pictures/maria sofia/SOFIAINCONFORME.png")
+                imagenes.append("/pictures/mariasofia/SOFIAINCONFORME.png")
             elif estado == "en_progreso":
-                imagenes.append("/pictures/maria sofia/CleanShot_2026-05-25_at_10.53.42_2x-removebg-preview.png")
+                imagenes.append("/pictures/mariasofia/CleanShot_2026-05-25_at_10.53.42_2x-removebg-preview.png")
             else:
-                imagenes.append("/pictures/maria sofia/SOFIAFELIZHECHO.png")
+                imagenes.append("/pictures/mariasofia/SOFIAFELIZHECHO.png")
     return imagenes
 
 

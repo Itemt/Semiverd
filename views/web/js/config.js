@@ -44,7 +44,7 @@ export const DATOS_DEMO = {
       categoria: 'bosque', puntos_recompensa: 200, monedas_recompensa: 20,
       dificultad: 3, orden: 2, icono_emoji: '🌳', color_hex: '#388E3C',
       estado: 'en_progreso', porcentaje_completado: 40, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/maria sofia/CleanShot_2026-05-25_at_10.53.42_2x-removebg-preview.png', '/pictures/camila/CAMILAINVESTIGANDO.png']
+      imagenes_personajes: ['/pictures/mariasofia/CleanShot_2026-05-25_at_10.53.42_2x-removebg-preview.png', '/pictures/camila/CAMILAINVESTIGANDO.png']
     },
     {
       id: 3, titulo: 'Ciudad Gris: Reciclaje Electrónico',
@@ -54,7 +54,7 @@ export const DATOS_DEMO = {
       categoria: 'ciudad', puntos_recompensa: 300, monedas_recompensa: 30,
       dificultad: 4, orden: 3, icono_emoji: '♻️', color_hex: '#F57C00',
       estado: 'disponible', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/maria sofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
+      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/mariasofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
     },
     {
       id: 4, titulo: 'Valle Energético: Eficiencia Verde',
@@ -94,7 +94,7 @@ export const DATOS_DEMO = {
       categoria: 'bosque', puntos_recompensa: 160, monedas_recompensa: 16,
       dificultad: 2, orden: 7, icono_emoji: '🦎', color_hex: '#388E3C',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/maria sofia/SOFIATRISTE.png']
+      imagenes_personajes: ['/pictures/mariasofia/SOFIATRISTE.png']
     },
     {
       id: 8, titulo: 'Barrio Centenario: Jardines Verticales',
@@ -114,7 +114,7 @@ export const DATOS_DEMO = {
       categoria: 'ciudad', puntos_recompensa: 220, monedas_recompensa: 22,
       dificultad: 3, orden: 9, icono_emoji: '🚲', color_hex: '#F57C00',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/giohan/GIOHANINVESTIGANDO.png', '/pictures/maria sofia/SOFIATRISTE.png']
+      imagenes_personajes: ['/pictures/giohan/GIOHANINVESTIGANDO.png', '/pictures/mariasofia/SOFIATRISTE.png']
     },
     {
       id: 10, titulo: 'Plaza Bolívar: Compostaje Comunitario',
@@ -174,7 +174,7 @@ export const DATOS_DEMO = {
       categoria: 'bosque', puntos_recompensa: 230, monedas_recompensa: 23,
       dificultad: 3, orden: 15, icono_emoji: '🌲', color_hex: '#388E3C',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/maria sofia/SOFIATRISTE.png']
+      imagenes_personajes: ['/pictures/mariasofia/SOFIATRISTE.png']
     },
     {
       id: 16, titulo: 'Comuna 7: Guardianes de la Energía',
@@ -184,7 +184,7 @@ export const DATOS_DEMO = {
       categoria: 'energia', puntos_recompensa: 250, monedas_recompensa: 25,
       dificultad: 3, orden: 16, icono_emoji: '💡', color_hex: '#FDD835',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/giohan/GIOHANINVESTIGANDO.png', '/pictures/maria sofia/SOFIATRISTE.png']
+      imagenes_personajes: ['/pictures/giohan/GIOHANINVESTIGANDO.png', '/pictures/mariasofia/SOFIATRISTE.png']
     },
     {
       id: 17, titulo: 'Mercado de Torcoroma: Cero Plásticos',
@@ -204,7 +204,7 @@ export const DATOS_DEMO = {
       categoria: 'ciudad', puntos_recompensa: 350, monedas_recompensa: 35,
       dificultad: 4, orden: 18, icono_emoji: '🎈', color_hex: '#F57C00',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/maria sofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
+      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/mariasofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
     },
     {
       id: 19, titulo: 'Quebrada las Camelias: Siembra de Agua',
@@ -214,7 +214,7 @@ export const DATOS_DEMO = {
       categoria: 'agua', puntos_recompensa: 270, monedas_recompensa: 27,
       dificultad: 4, orden: 19, icono_emoji: '⛲', color_hex: '#1E88E5',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/juliana/JULIANAESPERANDO.png', '/pictures/maria sofia/SOFIATRISTE.png']
+      imagenes_personajes: ['/pictures/juliana/JULIANAESPERANDO.png', '/pictures/mariasofia/SOFIATRISTE.png']
     },
     {
       id: 20, titulo: 'Gran Bosque del Río: Reforestación Leyenda',
@@ -224,7 +224,7 @@ export const DATOS_DEMO = {
       categoria: 'bosque', puntos_recompensa: 400, monedas_recompensa: 40,
       dificultad: 5, orden: 20, icono_emoji: '👑', color_hex: '#388E3C',
       estado: 'bloqueada', porcentaje_completado: 0, puntos_ganados: 0,
-      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/maria sofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
+      imagenes_personajes: ['/pictures/juliana/JULIANAPROPONIENDO.png', '/pictures/camila/CAMILACREANDO1.png', '/pictures/mariasofia/SOFIAINCONFORME.png', '/pictures/giohan/GIOHANDECIDIDO.png']
     }
   ],
   tips: [

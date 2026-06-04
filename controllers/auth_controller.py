@@ -135,14 +135,16 @@ def obtener_encoding_facial(imagen_base64: str, num_jitters: int = 1) -> np.ndar
 
 if getattr(sys, 'frozen', False):
     executable_dir = os.path.dirname(sys.executable)
-    if ".app/Contents/MacOS" in executable_dir:
+    if sys.platform == 'darwin' and ".app/Contents/MacOS" in executable_dir:
         # En macOS dentro del .app bundle, subir niveles para colocar la carpeta al lado de la app
         app_path = executable_dir.split(".app/Contents/MacOS")[0] + ".app"
         FACES_DIR = os.path.join(os.path.dirname(app_path), "faces_db")
     else:
+        # Windows (o macOS sin bundle): faces_db junto al ejecutable
         FACES_DIR = os.path.join(executable_dir, "faces_db")
 else:
     FACES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "faces_db")
+
 
 def guardar_imagen_rostro_local(user_id: int, imagen_base64: str) -> str:
     """Decodifica y guarda la imagen del rostro en el disco local"""

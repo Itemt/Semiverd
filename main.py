@@ -12,10 +12,11 @@ from dotenv import load_dotenv
 if getattr(sys, 'frozen', False):
     # En producción (congelado), buscar el .env en la misma carpeta que el archivo ejecutable real
     executable_dir = os.path.dirname(sys.executable)
-    if ".app/Contents/MacOS" in executable_dir:
+    if sys.platform == 'darwin' and ".app/Contents/MacOS" in executable_dir:
         # En macOS dentro del .app bundle, subir niveles para encontrar el .env al lado del .app
         app_path = executable_dir.split(".app/Contents/MacOS")[0] + ".app"
         executable_dir = os.path.dirname(app_path)
+    # En Windows: executable_dir ya apunta a la carpeta del .exe, no hace falta ajuste
     env_path = os.path.join(executable_dir, ".env")
     load_dotenv(env_path)
 else:
@@ -138,20 +139,72 @@ if os.path.exists(WEB_DIR):
 
 if __name__ == "__main__":
     import uvicorn
-    import webbrowser
     import threading
     import time
-    
-    # Abre el navegador automáticamente cuando inicia el ejecutable
-    def open_browser():
+
+    SERVER_HOST = "127.0.0.1"
+    SERVER_PORT = 8000
+    SERVER_URL  = f"http://{SERVER_HOST}:{SERVER_PORT}"
+
+    def iniciar_servidor():
+        """Arranca uvicorn en un hilo demonio (background)."""
+        uvicorn.run(
+            app,
+            host=SERVER_HOST,
+            port=SERVER_PORT,
+            log_level="info",
+        )
+
+    # Lanzar el servidor en segundo plano
+    hilo_servidor = threading.Thread(target=iniciar_servidor, daemon=True)
+    hilo_servidor.start()
+
+    # Intentar usar pywebview para una ventana de escritorio nativa
+    try:
+        import webview
+
+        def esperar_servidor_y_abrir(window):
+            """Espera a que el servidor esté listo y luego carga la URL."""
+            intentos = 0
+            import urllib.request
+            while intentos < 30:
+                try:
+                    urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
+                    window.load_url(SERVER_URL)
+                    return
+                except Exception:
+                    intentos += 1
+                    time.sleep(0.5)
+            # Fallback: cargar de todos modos si no respondió
+            window.load_url(SERVER_URL)
+
+        # Crear ventana nativa (sin chrome de browser, sin barra de dirección)
+        ventana = webview.create_window(
+            title="Semiverd - Las Cuatro Semillas Verdes",
+            url="about:blank",          # Cargamos la URL real al confirmar que el servidor arrancó
+            width=1200,
+            height=800,
+            min_size=(800, 600),
+            resizable=True,
+            text_select=False,          # Evita selección de texto como en browser
+        )
+
+        # Cargar la URL real una vez que el servidor esté listo
+        threading.Thread(
+            target=esperar_servidor_y_abrir,
+            args=(ventana,),
+            daemon=True
+        ).start()
+
+        # Arrancar pywebview (bloquea hasta que el usuario cierra la ventana)
+        webview.start(debug=False)
+
+    except ImportError:
+        # Fallback si pywebview no está disponible: abrir en el browser del sistema
+        import webbrowser
+        print("⚠️  pywebview no está instalado. Abriendo en el navegador del sistema...")
         time.sleep(1.5)
-        webbrowser.open("http://127.0.0.1:8000")
-        
-    threading.Thread(target=open_browser, daemon=True).start()
-    
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=8000,
-        log_level="info"
-    )
+        webbrowser.open(SERVER_URL)
+        # Mantener el proceso vivo mientras el servidor corre
+        hilo_servidor.join()
+

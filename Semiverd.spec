@@ -13,30 +13,70 @@ added_files = [
     (os.path.join(face_recognition_models_path, 'models'), 'face_recognition_models/models'),
 ]
 
-# No special append here, we will copy this manually in a post-build step
+# Hidden imports comunes a ambas plataformas
+common_hidden_imports = [
+    'uvicorn.logging',
+    'uvicorn.loops',
+    'uvicorn.loops.auto',
+    'uvicorn.protocols',
+    'uvicorn.protocols.http',
+    'uvicorn.protocols.http.auto',
+    'uvicorn.protocols.websockets',
+    'uvicorn.protocols.websockets.auto',
+    'uvicorn.lifespan.on',
+    'uvicorn.lifespan.off',
+    'models.models',
+    'models.schemas',
+    'psycopg2',
+    'face_recognition',
+    'passlib.handlers.bcrypt',
+    'bcrypt',
+    # pywebview - núcleo
+    'webview',
+    'webview.platforms',
+    'webview.window',
+    'webview.guilib',
+    'webview.util',
+    'webview.http',
+    'webview.event',
+    # Soporte JSON / serialización
+    'json',
+    'urllib.request',
+]
+
+# Hidden imports específicos de Windows (WebView2 / win32)
+windows_hidden_imports = [
+    'clr',
+    'pythoncom',
+    'win32api',
+    'win32con',
+    'webview.platforms.winforms',
+    'webview.platforms.edgechromium',
+    'webview.platforms.mshtml',
+    'System',
+    'System.Windows.Forms',
+    'System.Drawing',
+]
+
+# Hidden imports específicos de macOS (WebKit / Cocoa)
+macos_hidden_imports = [
+    'webview.platforms.cocoa',
+    'webview.platforms.gtk',
+]
+
+if sys.platform == 'win32':
+    platform_hidden_imports = windows_hidden_imports
+else:
+    platform_hidden_imports = macos_hidden_imports
+
+all_hidden_imports = common_hidden_imports + platform_hidden_imports
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
     datas=added_files,
-    hiddenimports=[
-        'uvicorn.logging',
-        'uvicorn.loops',
-        'uvicorn.loops.auto',
-        'uvicorn.protocols',
-        'uvicorn.protocols.http',
-        'uvicorn.protocols.http.auto',
-        'uvicorn.protocols.websockets',
-        'uvicorn.protocols.websockets.auto',
-        'uvicorn.lifespan.on',
-        'uvicorn.lifespan.off',
-        'models.models',
-        'models.schemas',
-        'psycopg2',
-        'face_recognition',
-        'passlib.handlers.bcrypt',
-    ],
+    hiddenimports=all_hidden_imports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -46,6 +86,19 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False,
 )
+
+# Agregar los datos de pywebview (plantillas HTML internas, etc.)
+try:
+    import webview
+    webview_path = os.path.dirname(webview.__file__)
+    # Incluir todos los assets del paquete pywebview
+    for root, dirs, files in os.walk(webview_path):
+        for f in files:
+            full = os.path.join(root, f)
+            rel  = os.path.relpath(full, os.path.dirname(webview_path))
+            a.datas.append((full, os.path.dirname(rel)))
+except Exception as e:
+    print(f"Advertencia: no se pudieron incluir los datos de pywebview: {e}")
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
@@ -101,7 +154,7 @@ else:
         upx=True,
         upx_exclude=[],
         runtime_tmpdir=None,
-        console=True,  # Mantener consola para visualizar logs de FastAPI
+        console=False,        # ← SIN consola negra: es una app GUI nativa
         disable_windowed_traceback=False,
         target_arch=None,
         codesign_identity=None,

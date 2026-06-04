@@ -109,7 +109,7 @@ export class MissionView {
           if (lower.includes('juliana')) nombre = 'Juliana';
           else if (lower.includes('giohan')) nombre = 'Giohan';
           else if (lower.includes('camila')) nombre = 'Camila';
-          else if (lower.includes('maria sofia') || lower.includes('sofia')) nombre = 'Sofía';
+          else if (lower.includes('mariasofia') || lower.includes('maria sofia') || lower.includes('sofia')) nombre = 'Sofía';
           
           img.title = nombre;
           
