@@ -17,7 +17,7 @@ from PIL import Image, ImageOps
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.orm import Session
 
 from models.database import get_db
@@ -34,7 +34,6 @@ SECRET_KEY = os.getenv("SECRET_KEY", "semiverd-secret-key-dev")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
@@ -43,11 +42,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 # ─────────────────────────────────────────────────────────
 
 def verificar_password(password_plano: str, password_hash: str) -> bool:
-    return pwd_context.verify(password_plano, password_hash)
+    try:
+        return bcrypt.checkpw(password_plano.encode("utf-8"), password_hash.encode("utf-8"))
+    except Exception:
+        return False
 
 
 def hashear_password(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
 def crear_token_acceso(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -264,10 +267,17 @@ def login(datos: LoginRequest, db: Session = Depends(get_db)):
     """
     usuario = db.query(Usuario).filter(Usuario.correo == datos.correo).first()
 
-    if not usuario or not verificar_password(datos.password, usuario.hashed_password):
+    if not usuario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El correo ingresado no está registrado en el sistema. Por favor, crea una cuenta primero. 🌿",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not verificar_password(datos.password, usuario.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo o contraseña incorrectos",
+            detail="Contraseña incorrecta. Inténtalo de nuevo. 🔐",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

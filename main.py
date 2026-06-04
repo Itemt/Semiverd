@@ -57,7 +57,7 @@ try:
 except Exception as e:
     print("\n❌ ERROR AL INICIALIZAR LA BASE DE DATOS:")
     traceback.print_exc()
-    print("\nPor favor, verifica la configuración de tu archivo .env y la conexión a la base de datos.")
+    print("\nPor favor, verifica la conexión y los permisos de la base de datos.")
     if getattr(sys, 'frozen', False):
         input("\nPresione Enter para salir...")
     sys.exit(1)

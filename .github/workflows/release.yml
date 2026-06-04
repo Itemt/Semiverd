@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: Semiverd-Windows-x64.zip
+            artifact_name: Semiverd.exe
           - os: macos-13
             artifact_name: Semiverd-macOS-x64.dmg
           - os: macos-14
@@ -52,11 +52,7 @@ jobs:
         shell: cmd
         run: |
           python -m PyInstaller Semiverd.spec
-          mkdir dist\Release
-          move dist\Semiverd.exe dist\Release\
-          copy .env.example dist\Release\.env
-          cd dist\Release
-          tar -a -c -f ..\..\${{ matrix.artifact_name }} *
+          move dist\Semiverd.exe .\Semiverd.exe
 
       - name: Build with PyInstaller (macOS)
         if: runner.os == 'macOS'

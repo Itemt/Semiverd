@@ -182,6 +182,42 @@ export class AppController {
       await this.model.loginCorreo(correo, password);
       this.entrarApp();
     } catch (err) {
+      // Check if error is due to email not registered (404)
+      const noRegistrado = err.message && (
+        err.message.includes('no está registrado') || 
+        err.message.includes('registrarse') || 
+        err.message.includes('404')
+      );
+
+      if (noRegistrado) {
+        // Check camera status
+        let hasCamera = false;
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          hasCamera = devices.some(device => device.kind === 'videoinput');
+        } catch (e) {
+          hasCamera = false;
+        }
+
+        if (!hasCamera) {
+          this.loginView.mostrarMensaje('No se detectó cámara en este dispositivo y este correo no está registrado. Por favor, regístrate. 🌿', 'error');
+          const regCorreoEl = document.getElementById('reg-correo');
+          if (regCorreoEl) regCorreoEl.value = correo;
+          setTimeout(() => {
+            this.loginView.mostrarTab('registro');
+          }, 3000);
+          return;
+        } else {
+          this.loginView.mostrarMensaje(err.message || 'Este correo no está registrado.', 'error');
+          const regCorreoEl = document.getElementById('reg-correo');
+          if (regCorreoEl) regCorreoEl.value = correo;
+          setTimeout(() => {
+            this.loginView.mostrarTab('registro');
+          }, 2000);
+          return;
+        }
+      }
+
       this.loginView.mostrarMensaje(err.message || 'Error al iniciar sesión. Verifica tus datos.', 'error');
     }
   }
@@ -224,8 +260,39 @@ export class AppController {
       this.loginView.iniciarStreamVideo(stream);
       this.loginView.mostrarMensaje('¡Cámara activa! Centra tu cara en el círculo y captura 📷', 'exito');
     } catch (err) {
-      this.loginView.mostrarMensaje('No se pudo acceder a la cámara. Verifica los permisos.', 'error');
       console.warn('Error cámara:', err);
+      // Check if they typed a correo in facial login tab
+      const correo = this.loginView.getCorreoFacial();
+      if (correo) {
+        this.loginView.mostrarMensaje('No se pudo acceder a la cámara. Verificando estado de tu cuenta... 🔍', 'error');
+        try {
+          // Attempt login with a dummy password to check registration status
+          await this.model.loginCorreo(correo, 'check_registration_status_dummy_pwd');
+        } catch (checkErr) {
+          const noRegistrado = checkErr.message && (
+            checkErr.message.includes('no está registrado') || 
+            checkErr.message.includes('registrarse') || 
+            checkErr.message.includes('404')
+          );
+          if (noRegistrado) {
+            this.loginView.mostrarMensaje('No tienes cámara en este dispositivo y no te has registrado. Redirigiendo a registro... 🌿', 'error');
+            const regCorreoEl = document.getElementById('reg-correo');
+            if (regCorreoEl) regCorreoEl.value = correo;
+            setTimeout(() => {
+              this.loginView.mostrarTab('registro');
+            }, 3000);
+          } else {
+            this.loginView.mostrarMensaje('No se detectó cámara, pero tu cuenta ya existe. Redirigiendo a ingreso con contraseña... 🔐', 'error');
+            const loginCorreoEl = document.getElementById('login-correo');
+            if (loginCorreoEl) loginCorreoEl.value = correo;
+            setTimeout(() => {
+              this.loginView.mostrarTab('correo');
+            }, 3000);
+          }
+        }
+      } else {
+        this.loginView.mostrarMensaje('No se pudo acceder a la cámara. Verifica los permisos.', 'error');
+      }
     }
   }
 
