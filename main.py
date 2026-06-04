@@ -229,7 +229,7 @@ def arrancar():
 
         def esperar_y_cargar():
             """Espera hasta que FastAPI responda y entonces carga la URL real."""
-            max_intentos = 60          # hasta 30 segundos de espera
+            max_intentos = 20          # hasta 10 segundos de espera
             for _ in range(max_intentos):
                 try:
                     urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
@@ -257,7 +257,7 @@ def arrancar():
         print("⚠️  pywebview no disponible. Abriendo en el navegador del sistema...")
 
         # Esperar a que el servidor arranque antes de abrir el browser
-        for _ in range(60):
+        for _ in range(20):
             try:
                 urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
                 break
