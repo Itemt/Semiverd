@@ -18,81 +18,21 @@ if getattr(sys, 'frozen', False):
     if sys.platform == 'darwin' and ".app/Contents/MacOS" in executable_dir:
         app_path = executable_dir.split(".app/Contents/MacOS")[0] + ".app"
         executable_dir = os.path.dirname(app_path)
-    env_path = os.path.join(executable_dir, ".env")
-    load_dotenv(env_path)
+    load_dotenv(os.path.join(executable_dir, ".env"))
 else:
     load_dotenv()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2. Importar dependencias críticas
+# 2. Crear la app FastAPI de inmediato (import rápido, sin dlib/numpy aún)
 # ─────────────────────────────────────────────────────────────────────────────
-try:
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
-    from models.database import engine, SessionLocal
-    from models import models
-    from controllers import auth_controller, missions_controller, users_controller, tips_controller
-except Exception as e:
-    print("\n❌ ERROR CRÍTICO AL IMPORTAR DEPENDENCIAS O INICIALIZAR MÓDULOS:")
-    traceback.print_exc()
-    print("\nEste error suele ocurrir si faltan librerías o dependencias del sistema.")
-    if getattr(sys, 'frozen', False):
-        input("\nPresione Enter para salir...")
-    sys.exit(1)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 3. Directorios base
-# ─────────────────────────────────────────────────────────────────────────────
-if getattr(sys, 'frozen', False):
-    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-PICTURES_DIR = os.path.join(BASE_DIR, "views", "pictures")
-WEB_DIR      = os.path.join(BASE_DIR, "views", "web")
-FAVICON_PATH = os.path.join(WEB_DIR, "favicon.png")
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 4. Inicializar base de datos y auto-semillar si está vacía
-# ─────────────────────────────────────────────────────────────────────────────
-try:
-    models.Base.metadata.create_all(bind=engine)
-
-    db = SessionLocal()
-    try:
-        from seed import cargar_misiones, cargar_tips, cargar_recompensas
-        if db.query(models.Mision).count() == 0:
-            print("🌱 Base de datos vacía detectada. Iniciando auto-semillado...")
-            cargar_misiones(db)
-            cargar_tips(db)
-            cargar_recompensas(db)
-            print("🌿 Auto-semillado completado con éxito.")
-    except Exception as seed_err:
-        print(f"⚠️ Advertencia al auto-semillar la base de datos: {seed_err}")
-        db.rollback()
-    finally:
-        db.close()
-except Exception as e:
-    print("\n❌ ERROR AL INICIALIZAR LA BASE DE DATOS:")
-    traceback.print_exc()
-    print("\nPor favor, verifica la conexión y los permisos de la base de datos.")
-    if getattr(sys, 'frozen', False):
-        input("\nPresione Enter para salir...")
-    sys.exit(1)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. Crear aplicación FastAPI
-# ─────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="🌱 Semiverd API",
-    description=(
-        "API REST del MVP de Semiverd - La app gamificada de las Cuatro Semillas Verdes. "
-        "Aprende sobre el cuidado del medio ambiente completando misiones ecológicas "
-        "en Barrancabermeja. ¡Menos cemento, más oxígeno!"
-    ),
+    description="API REST del MVP de Semiverd - Las Cuatro Semillas Verdes de Barrancabermeja.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -106,41 +46,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_controller.router)
-app.include_router(missions_controller.router)
-app.include_router(users_controller.router)
-app.include_router(tips_controller.router)
-
-
-@app.get("/api-info", tags=["Raíz"])
-def raiz():
-    return {
-        "mensaje": "🌿 Bienvenido a la API de Semiverd",
-        "descripcion": "Las Cuatro Semillas Verdes de Barrancabermeja",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "estado": "activo"
-    }
-
+# Endpoint de salud disponible desde el primer momento (uvicorn lo sirve
+# en cuanto arranca, antes de que los controladores pesados terminen de cargar)
 @app.get("/salud", tags=["Raíz"])
 def verificar_salud():
     return {"estado": "saludable", "servicio": "semiverd-api"}
 
-@app.get("/favicon.ico", include_in_schema=False)
-def obtener_favicon():
-    if os.path.exists(FAVICON_PATH):
-        return FileResponse(FAVICON_PATH)
-    return {"mensaje": "No favicon"}
-
-if os.path.exists(PICTURES_DIR):
-    app.mount("/pictures", StaticFiles(directory=PICTURES_DIR), name="pictures")
-
-if os.path.exists(WEB_DIR):
-    app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
-
+@app.get("/api-info", tags=["Raíz"])
+def raiz():
+    return {"mensaje": "🌿 Bienvenido a la API de Semiverd", "version": "1.0.0"}
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. Página HTML de pantalla de carga (se muestra mientras el servidor arranca)
+# 3. Directorios base
+# ─────────────────────────────────────────────────────────────────────────────
+if getattr(sys, 'frozen', False):
+    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+PICTURES_DIR = os.path.join(BASE_DIR, "views", "pictures")
+WEB_DIR      = os.path.join(BASE_DIR, "views", "web")
+FAVICON_PATH = os.path.join(WEB_DIR, "favicon.png")
+
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = 8000
+SERVER_URL  = f"http://{SERVER_HOST}:{SERVER_PORT}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. HTML de pantalla de carga
 # ─────────────────────────────────────────────────────────────────────────────
 LOADING_HTML = """<!DOCTYPE html>
 <html lang="es">
@@ -181,34 +114,87 @@ LOADING_HTML = """<!DOCTYPE html>
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 7. Función de arranque: servidor + ventana nativa (usado por PyInstaller y dev)
+# 5. Inicialización pesada en segundo plano
+#    (face_recognition, dlib, numpy, DB, seed) — no bloquea la apertura de
+#    la ventana. Una vez listo, uvicorn arranca y la ventana carga la UI real.
 # ─────────────────────────────────────────────────────────────────────────────
-def arrancar():
-    import uvicorn
-    import urllib.request
+def _inicializar_y_servir():
+    """
+    Importa las dependencias pesadas y arranca uvicorn en background.
+    Se lanza en un hilo demonio antes de abrir la ventana, así el proceso
+    de carga corre en paralelo con la inicialización de pywebview.
+    """
+    try:
+        import uvicorn
 
-    SERVER_HOST = "127.0.0.1"
-    SERVER_PORT = 8000
-    SERVER_URL  = f"http://{SERVER_HOST}:{SERVER_PORT}"
-
-    # ── 7a. Arrancar uvicorn en un hilo demonio ──────────────────────────────
-    def iniciar_servidor():
-        uvicorn.run(
-            app,
-            host=SERVER_HOST,
-            port=SERVER_PORT,
-            log_level="warning",   # menos ruido en producción
+        # Imports pesados (dlib, face_recognition, numpy, PIL…)
+        from models.database import engine, SessionLocal
+        from models import models
+        from controllers import (
+            auth_controller, missions_controller,
+            users_controller, tips_controller
         )
 
-    hilo_servidor = threading.Thread(target=iniciar_servidor, daemon=True)
-    hilo_servidor.start()
+        # Registrar rutas y favicon
+        app.include_router(auth_controller.router)
+        app.include_router(missions_controller.router)
+        app.include_router(users_controller.router)
+        app.include_router(tips_controller.router)
 
-    # ── 7b. Intentar pywebview (ventana desktop nativa) ──────────────────────
+        @app.get("/favicon.ico", include_in_schema=False)
+        def obtener_favicon():
+            if os.path.exists(FAVICON_PATH):
+                return FileResponse(FAVICON_PATH)
+            return {}
+
+        # Montar archivos estáticos
+        if os.path.exists(PICTURES_DIR):
+            app.mount("/pictures", StaticFiles(directory=PICTURES_DIR), name="pictures")
+        if os.path.exists(WEB_DIR):
+            app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
+
+        # Inicializar base de datos
+        models.Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            from seed import cargar_misiones, cargar_tips, cargar_recompensas
+            if db.query(models.Mision).count() == 0:
+                print("🌱 Base de datos vacía. Iniciando auto-semillado...")
+                cargar_misiones(db)
+                cargar_tips(db)
+                cargar_recompensas(db)
+                print("🌿 Auto-semillado completado.")
+        except Exception as seed_err:
+            print(f"⚠️ Error al auto-semillar: {seed_err}")
+            db.rollback()
+        finally:
+            db.close()
+
+        # Arrancar uvicorn (bloquea este hilo para siempre)
+        uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT, log_level="warning")
+
+    except Exception:
+        print("\n❌ ERROR CRÍTICO durante la inicialización:")
+        traceback.print_exc()
+        if getattr(sys, 'frozen', False):
+            input("\nPresione Enter para salir...")
+        sys.exit(1)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Función principal de arranque
+# ─────────────────────────────────────────────────────────────────────────────
+def arrancar():
+    import urllib.request
+
+    # Lanzar la inicialización pesada de inmediato en background
+    threading.Thread(target=_inicializar_y_servir, daemon=True).start()
+
     try:
         import webview
-
-        # Escribir HTML de carga en un fichero temporal para que pywebview lo muestre
         import tempfile
+
+        # Escribir HTML de carga en fichero temporal
         tmp = tempfile.NamedTemporaryFile(
             mode='w', suffix='.html', delete=False, encoding='utf-8'
         )
@@ -228,13 +214,15 @@ def arrancar():
         )
 
         def esperar_y_cargar():
-            """Espera hasta que FastAPI responda y entonces carga la URL real."""
-            max_intentos = 20          # hasta 10 segundos de espera
-            for _ in range(max_intentos):
+            """
+            Espera a que el servidor responda /salud y carga la UI real.
+            60 intentos × 0.5 s = hasta 30 s de espera máxima.
+            En Windows, dlib puede tardar 15-25 s en cargarse desde el .exe.
+            """
+            for _ in range(60):
                 try:
                     urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
                     ventana.load_url(SERVER_URL)
-                    # Limpiar fichero temporal
                     try:
                         os.unlink(tmp.name)
                     except Exception:
@@ -243,34 +231,32 @@ def arrancar():
                 except Exception:
                     time.sleep(0.5)
 
-            # Fallback: cargar de todos modos aunque no haya respondido
+            # Fallback: cargar de todos modos
             ventana.load_url(SERVER_URL)
 
         threading.Thread(target=esperar_y_cargar, daemon=True).start()
 
-        # webview.start() bloquea hasta que el usuario cierra la ventana
+        # Bloquea hasta que el usuario cierra la ventana
         webview.start(debug=False)
 
     except ImportError:
-        # pywebview no instalado → abrir en browser del sistema (dev/fallback)
+        # pywebview no disponible → abrir en navegador del sistema
         import webbrowser
         print("⚠️  pywebview no disponible. Abriendo en el navegador del sistema...")
-
-        # Esperar a que el servidor arranque antes de abrir el browser
-        for _ in range(20):
+        for _ in range(60):
             try:
                 urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
                 break
             except Exception:
                 time.sleep(0.5)
-
         webbrowser.open(SERVER_URL)
         # Mantener el proceso vivo
-        hilo_servidor.join()
+        while True:
+            time.sleep(60)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 8. Entry point: tanto en desarrollo (python main.py) como congelado (.exe)
+# 7. Entry point (desarrollo y ejecutable congelado)
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__" or getattr(sys, 'frozen', False):
     arrancar()
