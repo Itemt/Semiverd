@@ -27,7 +27,6 @@ common_hidden_imports = [
     'uvicorn.lifespan.off',
     'models.models',
     'models.schemas',
-    'psycopg2',
     'face_recognition',
     'passlib.handlers.bcrypt',
     'bcrypt',
@@ -58,10 +57,11 @@ windows_hidden_imports = [
     'System.Drawing',
 ]
 
-# Hidden imports específicos de macOS (WebKit / Cocoa)
+# Hidden imports específicos de macOS (WebKit / Cocoa + PostgreSQL)
 macos_hidden_imports = [
     'webview.platforms.cocoa',
     'webview.platforms.gtk',
+    'psycopg2',  # Solo macOS: en Windows usamos SQLite
 ]
 
 if sys.platform == 'win32':
@@ -154,7 +154,7 @@ else:
         upx=True,
         upx_exclude=[],
         runtime_tmpdir=None,
-        console=False,        # ← SIN consola negra: es una app GUI nativa
+        console=True,         # ← Consola visible para diagnóstico en Windows
         disable_windowed_traceback=False,
         target_arch=None,
         codesign_identity=None,
