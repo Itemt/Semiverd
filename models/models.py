@@ -26,29 +26,12 @@ from models.database import Base
 # Enumeraciones
 # ─────────────────────────────────────────────────────────
 
-class NivelUsuario(str, enum.Enum):
-    """Niveles de progreso del guardián"""
-    SEMILLA = "Semilla"
-    BROTE = "Brote"
-    ARBOL = "Árbol"
-    GUARDAAN = "Guardián"
-    MAESTRO = "Maestro del Bosque"
-
-
 class EstadoMision(str, enum.Enum):
     """Estado de una misión para el usuario"""
     BLOQUEADA = "bloqueada"
     DISPONIBLE = "disponible"
     EN_PROGRESO = "en_progreso"
     COMPLETADA = "completada"
-
-
-class CategoriaMision(str, enum.Enum):
-    """Categorías de las misiones"""
-    AGUA = "agua"
-    BOSQUE = "bosque"
-    CIUDAD = "ciudad"
-    ENERGIA = "energia"
 
 
 # ─────────────────────────────────────────────────────────
@@ -71,7 +54,7 @@ class Usuario(Base):
 
     # Gamificación
     puntos_totales = Column(Integer, default=0)
-    nivel = Column(String(50), default=NivelUsuario.SEMILLA)
+    nivel = Column(String(50), default="Semilla")
     nivel_arbol = Column(Integer, default=1)      # 1-10: crecimiento del árbol
     racha_dias = Column(Integer, default=0)        # Días consecutivos activo
     monedas_verdes = Column(Integer, default=0)    # Moneda interna
