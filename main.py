@@ -6,23 +6,26 @@ Proyecto: Semiverd MVP - Las Cuatro Semillas Verdes de Barrancabermeja
 import os
 import sys
 import traceback
+import threading
+import time
 from dotenv import load_dotenv
 
-# Cargar variables de entorno lo antes posible para configurar la app
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Cargar .env lo antes posible
+# ─────────────────────────────────────────────────────────────────────────────
 if getattr(sys, 'frozen', False):
-    # En producción (congelado), buscar el .env en la misma carpeta que el archivo ejecutable real
     executable_dir = os.path.dirname(sys.executable)
     if sys.platform == 'darwin' and ".app/Contents/MacOS" in executable_dir:
-        # En macOS dentro del .app bundle, subir niveles para encontrar el .env al lado del .app
         app_path = executable_dir.split(".app/Contents/MacOS")[0] + ".app"
         executable_dir = os.path.dirname(app_path)
-    # En Windows: executable_dir ya apunta a la carpeta del .exe, no hace falta ajuste
     env_path = os.path.join(executable_dir, ".env")
     load_dotenv(env_path)
 else:
     load_dotenv()
 
-# Intentar importar dependencias crítcas y controladores
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Importar dependencias críticas
+# ─────────────────────────────────────────────────────────────────────────────
 try:
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
@@ -40,27 +43,27 @@ except Exception as e:
         input("\nPresione Enter para salir...")
     sys.exit(1)
 
-# Determinar el directorio base para activos estáticos (Soporte para PyInstaller)
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Directorios base
+# ─────────────────────────────────────────────────────────────────────────────
 if getattr(sys, 'frozen', False):
-    # sys._MEIPASS contiene la carpeta temporal donde PyInstaller extrae los activos empaquetados
     BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Directorios estáticos
 PICTURES_DIR = os.path.join(BASE_DIR, "views", "pictures")
-WEB_DIR = os.path.join(BASE_DIR, "views", "web")
+WEB_DIR      = os.path.join(BASE_DIR, "views", "web")
 FAVICON_PATH = os.path.join(WEB_DIR, "favicon.png")
 
-# Crear todas las tablas al iniciar (si no existen)
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. Inicializar base de datos y auto-semillar si está vacía
+# ─────────────────────────────────────────────────────────────────────────────
 try:
     models.Base.metadata.create_all(bind=engine)
-    
-    # Auto-semillar la base de datos si está vacía
+
     db = SessionLocal()
     try:
         from seed import cargar_misiones, cargar_tips, cargar_recompensas
-        # Solo cargar si no hay misiones registradas
         if db.query(models.Mision).count() == 0:
             print("🌱 Base de datos vacía detectada. Iniciando auto-semillado...")
             cargar_misiones(db)
@@ -80,6 +83,9 @@ except Exception as e:
         input("\nPresione Enter para salir...")
     sys.exit(1)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Crear aplicación FastAPI
+# ─────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="🌱 Semiverd API",
     description=(
@@ -92,18 +98,14 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Middleware CORS (permite llamadas desde el frontend)
-origins = ["*"] # Permitir todo para el ejecutable local
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Registrar todos los routers de la API
 app.include_router(auth_controller.router)
 app.include_router(missions_controller.router)
 app.include_router(users_controller.router)
@@ -130,81 +132,145 @@ def obtener_favicon():
         return FileResponse(FAVICON_PATH)
     return {"mensaje": "No favicon"}
 
-# Montar carpetas (si existen)
 if os.path.exists(PICTURES_DIR):
     app.mount("/pictures", StaticFiles(directory=PICTURES_DIR), name="pictures")
 
 if os.path.exists(WEB_DIR):
     app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="web")
 
-if __name__ == "__main__":
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Página HTML de pantalla de carga (se muestra mientras el servidor arranca)
+# ─────────────────────────────────────────────────────────────────────────────
+LOADING_HTML = """<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Cargando Semiverd…</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1f0e;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #c8f0c8;
+    }
+    .logo { font-size: 3.5rem; margin-bottom: 1rem; animation: pulse 2s infinite; }
+    h1 { font-size: 1.8rem; font-weight: 700; color: #5cd65c; margin-bottom: 0.5rem; }
+    p  { font-size: 1rem; color: #88bb88; margin-bottom: 2rem; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 5px solid #1e3d1e;
+      border-top-color: #5cd65c;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes pulse  { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  </style>
+</head>
+<body>
+  <div class="logo">🌱</div>
+  <h1>Semiverd</h1>
+  <p>Iniciando aplicación, un momento…</p>
+  <div class="spinner"></div>
+</body>
+</html>"""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. Función de arranque: servidor + ventana nativa (usado por PyInstaller y dev)
+# ─────────────────────────────────────────────────────────────────────────────
+def arrancar():
     import uvicorn
-    import threading
-    import time
+    import urllib.request
 
     SERVER_HOST = "127.0.0.1"
     SERVER_PORT = 8000
     SERVER_URL  = f"http://{SERVER_HOST}:{SERVER_PORT}"
 
+    # ── 7a. Arrancar uvicorn en un hilo demonio ──────────────────────────────
     def iniciar_servidor():
-        """Arranca uvicorn en un hilo demonio (background)."""
         uvicorn.run(
             app,
             host=SERVER_HOST,
             port=SERVER_PORT,
-            log_level="info",
+            log_level="warning",   # menos ruido en producción
         )
 
-    # Lanzar el servidor en segundo plano
     hilo_servidor = threading.Thread(target=iniciar_servidor, daemon=True)
     hilo_servidor.start()
 
-    # Intentar usar pywebview para una ventana de escritorio nativa
+    # ── 7b. Intentar pywebview (ventana desktop nativa) ──────────────────────
     try:
         import webview
 
-        def esperar_servidor_y_abrir(window):
-            """Espera a que el servidor esté listo y luego carga la URL."""
-            intentos = 0
-            import urllib.request
-            while intentos < 30:
-                try:
-                    urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
-                    window.load_url(SERVER_URL)
-                    return
-                except Exception:
-                    intentos += 1
-                    time.sleep(0.5)
-            # Fallback: cargar de todos modos si no respondió
-            window.load_url(SERVER_URL)
+        # Escribir HTML de carga en un fichero temporal para que pywebview lo muestre
+        import tempfile
+        tmp = tempfile.NamedTemporaryFile(
+            mode='w', suffix='.html', delete=False, encoding='utf-8'
+        )
+        tmp.write(LOADING_HTML)
+        tmp.flush()
+        tmp.close()
+        loading_url = f"file:///{tmp.name.replace(os.sep, '/')}"
 
-        # Crear ventana nativa (sin chrome de browser, sin barra de dirección)
         ventana = webview.create_window(
             title="Semiverd - Las Cuatro Semillas Verdes",
-            url="about:blank",          # Cargamos la URL real al confirmar que el servidor arrancó
+            url=loading_url,
             width=1200,
             height=800,
             min_size=(800, 600),
             resizable=True,
-            text_select=False,          # Evita selección de texto como en browser
+            text_select=False,
         )
 
-        # Cargar la URL real una vez que el servidor esté listo
-        threading.Thread(
-            target=esperar_servidor_y_abrir,
-            args=(ventana,),
-            daemon=True
-        ).start()
+        def esperar_y_cargar():
+            """Espera hasta que FastAPI responda y entonces carga la URL real."""
+            max_intentos = 60          # hasta 30 segundos de espera
+            for _ in range(max_intentos):
+                try:
+                    urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
+                    ventana.load_url(SERVER_URL)
+                    # Limpiar fichero temporal
+                    try:
+                        os.unlink(tmp.name)
+                    except Exception:
+                        pass
+                    return
+                except Exception:
+                    time.sleep(0.5)
 
-        # Arrancar pywebview (bloquea hasta que el usuario cierra la ventana)
+            # Fallback: cargar de todos modos aunque no haya respondido
+            ventana.load_url(SERVER_URL)
+
+        threading.Thread(target=esperar_y_cargar, daemon=True).start()
+
+        # webview.start() bloquea hasta que el usuario cierra la ventana
         webview.start(debug=False)
 
     except ImportError:
-        # Fallback si pywebview no está disponible: abrir en el browser del sistema
+        # pywebview no instalado → abrir en browser del sistema (dev/fallback)
         import webbrowser
-        print("⚠️  pywebview no está instalado. Abriendo en el navegador del sistema...")
-        time.sleep(1.5)
+        print("⚠️  pywebview no disponible. Abriendo en el navegador del sistema...")
+
+        # Esperar a que el servidor arranque antes de abrir el browser
+        for _ in range(60):
+            try:
+                urllib.request.urlopen(f"{SERVER_URL}/salud", timeout=1)
+                break
+            except Exception:
+                time.sleep(0.5)
+
         webbrowser.open(SERVER_URL)
-        # Mantener el proceso vivo mientras el servidor corre
+        # Mantener el proceso vivo
         hilo_servidor.join()
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Entry point: tanto en desarrollo (python main.py) como congelado (.exe)
+# ─────────────────────────────────────────────────────────────────────────────
+if __name__ == "__main__" or getattr(sys, 'frozen', False):
+    arrancar()
