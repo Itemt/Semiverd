@@ -28,7 +28,7 @@ try:
     from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse
 
-    from models.database import engine
+    from models.database import engine, SessionLocal
     from models import models
     from controllers import auth_controller, missions_controller, users_controller, tips_controller
 except Exception as e:
@@ -54,6 +54,23 @@ FAVICON_PATH = os.path.join(WEB_DIR, "favicon.png")
 # Crear todas las tablas al iniciar (si no existen)
 try:
     models.Base.metadata.create_all(bind=engine)
+    
+    # Auto-semillar la base de datos si está vacía
+    db = SessionLocal()
+    try:
+        from seed import cargar_misiones, cargar_tips, cargar_recompensas
+        # Solo cargar si no hay misiones registradas
+        if db.query(models.Mision).count() == 0:
+            print("🌱 Base de datos vacía detectada. Iniciando auto-semillado...")
+            cargar_misiones(db)
+            cargar_tips(db)
+            cargar_recompensas(db)
+            print("🌿 Auto-semillado completado con éxito.")
+    except Exception as seed_err:
+        print(f"⚠️ Advertencia al auto-semillar la base de datos: {seed_err}")
+        db.rollback()
+    finally:
+        db.close()
 except Exception as e:
     print("\n❌ ERROR AL INICIALIZAR LA BASE DE DATOS:")
     traceback.print_exc()
