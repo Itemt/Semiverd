@@ -153,7 +153,10 @@ else:
         strip=False,
         upx=True,
         upx_exclude=[],
-        runtime_tmpdir=None,
+        # Directorio persistente para caché de extracción.
+        # PyInstaller sólo re-extrae cuando el contenido del .exe cambia,
+        # lo que acelera enormemente los arranques posteriores al primero.
+        runtime_tmpdir='%LOCALAPPDATA%\\Semiverd\\cache',
         console=True,         # ← Consola visible para diagnóstico en Windows
         disable_windowed_traceback=False,
         target_arch=None,

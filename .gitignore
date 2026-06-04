@@ -24,9 +24,10 @@ htmlcov/
 *.ntvs*
 *.njsproj
 *.sln
-# User generated pictures
-views/pictures/
+# User generated pictures (facial recognition)
 faces_db/
+# Fotos subidas por usuarios (perfil) - no se trackean, son datos de usuario
+# Las imágenes de personajes (views/pictures/) SÍ se trackean (son assets del juego)
 
 # PyInstaller build directories
 build/
