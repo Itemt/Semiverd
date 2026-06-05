@@ -61,6 +61,7 @@ class LoginFacialRequest(BaseModel):
     imagen_base64: str = Field(..., description="Foto capturada en base64")
     correo: Optional[str] = Field(None, description="Correo o alias del usuario para vincular/registrar")
     nombre: Optional[str] = None      # Nombre para auto-registrar si no existe
+    password: Optional[str] = None    # Contraseña opcional en caso de auto-registro
 
     @field_validator('correo')
     @classmethod

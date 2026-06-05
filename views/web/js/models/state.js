@@ -174,11 +174,12 @@ export class StateModel {
     return respuesta;
   }
 
-  async loginFacialConNombre(correo, nombre, fotoBase64) {
+  async loginFacialConNombre(correo, nombre, password, fotoBase64) {
     const respuesta = await this.api('POST', '/auth/login-facial', {
       imagen_base64: fotoBase64,
       correo: correo || null,
-      nombre: nombre || null
+      nombre: nombre || null,
+      password: password || null
     });
     this.token = respuesta.access_token;
     this.usuario = respuesta.usuario;

@@ -175,12 +175,12 @@ def guardar_imagen_rostro_local(user_id: int, imagen_base64: str) -> str:
         with open(filepath, "wb") as f:
             f.write(imagen_bytes)
             
-        # Mantener un límite físico de archivos en disco (máximo 5)
+        # Mantener un límite físico de archivos en disco (máximo 15)
         archivos = sorted(
             [os.path.join(user_dir, arch) for arch in os.listdir(user_dir) if arch.startswith("face_")],
             key=os.path.getmtime
         )
-        while len(archivos) > 5:
+        while len(archivos) > 15:
             viejo = archivos.pop(0)
             try:
                 os.remove(viejo)
@@ -324,8 +324,8 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
       con el rostro capturado (no necesita contraseña).
     - Si no se envía 'correo': realiza búsqueda biométrica directa en la BD.
     """
-    # 1. Extraer el encoding del rostro enviado (con 1 jitter para velocidad en login)
-    encoding_login = obtener_encoding_facial(datos.imagen_base64)
+    # 1. Extraer el encoding del rostro enviado (con mayor precisión para login para evitar falsos positivos)
+    encoding_login = obtener_encoding_facial(datos.imagen_base64, num_jitters=3)
 
     # Caso 1: Se provee correo → Vincular, verificar o auto-registrar
     if datos.correo:
@@ -388,7 +388,7 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
                     # Solo agregar si no es extremadamente redundante (distancia > 0.22 con las ya guardadas)
                     if np.min(distancias) > 0.22:
                         enc_lista.append(encoding_login.tolist())
-                        if len(enc_lista) > 5:
+                        if len(enc_lista) > 15:
                             enc_lista.pop(0) # Eliminar la más antigua
                         usuario.face_encoding = json.dumps(enc_lista)
                 except HTTPException as he:
@@ -458,18 +458,22 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
                         detail=f"Este rostro ya está registrado con otra cuenta de correo ({usuario_duplicado.correo}). 📷"
                     )
 
-            # Para el registro por primera vez, extraer encoding con alta precisión (num_jitters=3)
-            encoding_registro = obtener_encoding_facial(datos.imagen_base64, num_jitters=3)
+            # Para el registro por primera vez, extraer encoding con máxima precisión
+            encoding_registro = obtener_encoding_facial(datos.imagen_base64, num_jitters=10)
 
             nombre_usuario = datos.nombre or datos.correo.split("@")[0].capitalize()
-            # Generar una contraseña aleatoria segura
-            import secrets
-            password_temporal = secrets.token_urlsafe(24)
+            # Usar la contraseña proporcionada o generar una si no se proporcionó
+            if datos.password and len(datos.password) >= 6:
+                password_plano = datos.password
+            else:
+                import secrets
+                password_plano = secrets.token_urlsafe(24)
+
             usuario = Usuario(
                 nombre=nombre_usuario,
                 correo=datos.correo,
                 apodo=nombre_usuario,
-                hashed_password=hashear_password(password_temporal),
+                hashed_password=hashear_password(password_plano),
                 activo=True
             )
             db.add(usuario)
@@ -597,7 +601,7 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
                 
                 if len(propias_distancias) == 0 or np.min(propias_distancias) > 0.22:
                     enc_lista.append(encoding_login.tolist())
-                    if len(enc_lista) > 5:
+                    if len(enc_lista) > 15:
                         enc_lista.pop(0)
                     usuario_autenticado.face_encoding = json.dumps(enc_lista)
             except Exception:

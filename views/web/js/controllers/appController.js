@@ -262,7 +262,7 @@ export class AppController {
     } catch (err) {
       console.warn('Error cámara:', err);
       // Check if they typed a correo in facial login tab
-      const correo = this.loginView.getCorreoFacial();
+      const { correo } = this.loginView.getCredentialsFacial();
       if (correo) {
         this.loginView.mostrarMensaje('No se pudo acceder a la cámara. Verificando estado de tu cuenta... 🔍', 'error');
         try {
@@ -315,10 +315,15 @@ export class AppController {
   }
 
   async ejecutarLoginFacial() {
-    const correo = this.loginView.getCorreoFacial();
+    const { correo, password } = this.loginView.getCredentialsFacial();
     const nombre = document.getElementById('facial-nombre')?.value?.trim() || null;
     if (!this.model.fotoCapturada) {
       this.loginView.mostrarMensaje('Primero captura tu foto 📷', 'error');
+      return;
+    }
+    
+    if (correo && password.length < 6) {
+      this.loginView.mostrarMensaje('La contraseña debe tener al menos 6 caracteres para registrarte 🌿', 'error');
       return;
     }
 
@@ -329,7 +334,7 @@ export class AppController {
       ''
     );
     try {
-      const respuesta = await this.model.loginFacialConNombre(correo, nombre, this.model.fotoCapturada);
+      const respuesta = await this.model.loginFacialConNombre(correo, nombre, password, this.model.fotoCapturada);
       const nombreGuardian = respuesta?.usuario?.apodo || respuesta?.usuario?.nombre || 'Guardián';
       const mensaje = correo
         ? `✅ ¡Rostro vinculado! Bienvenido, ${nombreGuardian} 🌿`

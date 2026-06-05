@@ -46,8 +46,11 @@ export class LoginView {
     return { nombre, apodo: nombre, correo, password };
   }
 
-  getCorreoFacial() {
-    return document.getElementById('facial-correo').value.trim();
+  getCredentialsFacial() {
+    return {
+      correo: document.getElementById('facial-correo').value.trim(),
+      password: document.getElementById('facial-password').value.trim()
+    };
   }
 
   mostrarMensaje(texto, tipo) {
@@ -67,6 +70,8 @@ export class LoginView {
     document.getElementById('reg-correo').value = '';
     document.getElementById('reg-password').value = '';
     document.getElementById('facial-correo').value = '';
+    if (document.getElementById('facial-password')) document.getElementById('facial-password').value = '';
+    if (document.getElementById('facial-nombre')) document.getElementById('facial-nombre').value = '';
   }
 
   iniciarStreamVideo(stream) {
