@@ -133,8 +133,6 @@ def obtener_encoding_facial(imagen_base64: str, num_jitters: int = 1) -> np.ndar
         )
 
 
-import re
-
 if getattr(sys, 'frozen', False):
     executable_dir = os.path.dirname(sys.executable)
     if sys.platform == 'darwin' and ".app/Contents/MacOS" in executable_dir:
@@ -148,11 +146,9 @@ else:
     FACES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "faces_db")
 
 
-def _es_correo_valido(correo: str) -> bool:
-    """Devuelve True si la cadena tiene formato de email válido."""
-    if not correo:
-        return False
-    return bool(re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', correo))
+def _correo_es_vacio(correo) -> bool:
+    """Devuelve True si el correo es None o cadena vacía (registro corrupto)."""
+    return not correo or not str(correo).strip()
 
 
 def guardar_imagen_rostro_local(user_id: int, imagen_base64: str) -> str:
@@ -409,14 +405,13 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
         # Si no existe, auto-registrar con los datos proporcionados
         if not usuario:
             # Evitar registrar una cara que ya pertenece a otro correo.
-            # Los usuarios con correo inválido (registros corruptos) se limpian automáticamente.
+            # Los usuarios con correo vacío (registros corruptos) se limpian automáticamente.
             todos_usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
 
-            # Auto-limpiar registros con correo inválido (ej. alguien que escribió "SI")
+            # Auto-limpiar registros corruptos: correo None o vacío
             for u in todos_usuarios:
-                if not _es_correo_valido(u.correo):
+                if _correo_es_vacio(u.correo):
                     print(f"[Semiverd] Limpiando usuario corrupto: id={u.id} correo='{u.correo}'")
-                    # Borrar archivos de rostro del disco
                     user_dir = os.path.join(FACES_DIR, f"user_{u.id}")
                     try:
                         import shutil
