@@ -512,6 +512,41 @@ def cargar_tips(db):
             icono_emoji="👕",
             guardian_autor="Sofía"
         ),
+        Tip(
+            titulo="No más pitillos de plástico",
+            contenido="Los pitillos de plástico tardan hasta 500 años en descomponerse. Pide tus bebidas sin pitillo o usa uno de metal reutilizable.",
+            categoria="reciclaje",
+            icono_emoji="🥤",
+            guardian_autor="Camila"
+        ),
+        Tip(
+            titulo="Aprovecha la luz natural",
+            contenido="Abre tus ventanas y cortinas durante el día en lugar de encender la luz. Ahorrarás energía y la luz solar es mejor para tu salud.",
+            categoria="energia",
+            icono_emoji="☀️",
+            guardian_autor="Giohan"
+        ),
+        Tip(
+            titulo="Ducha rápida, planeta feliz",
+            contenido="Tomar duchas de 5 minutos en lugar de 10 puede ahorrar hasta 50 litros de agua cada día. Pon tu canción favorita de 5 minutos y úsala como reloj.",
+            categoria="agua",
+            icono_emoji="🚿",
+            guardian_autor="Juliana"
+        ),
+        Tip(
+            titulo="Crea un hotel para insectos",
+            contenido="Apila troncos, hojas secas y ladrillos con huecos en una esquina de tu jardín. Esto atraerá abejas solitarias y mariquitas que polinizarán tus plantas.",
+            categoria="jardinería",
+            icono_emoji="🐞",
+            guardian_autor="Sofía"
+        ),
+        Tip(
+            titulo="Apaga la pantalla de tu computadora",
+            contenido="Si vas a alejarte de tu computadora por más de 10 minutos, apaga el monitor. Ahorra energía y prolonga la vida útil de tu equipo.",
+            categoria="energia",
+            icono_emoji="🖥️",
+            guardian_autor="Giohan"
+        ),
     ]
 
     for tip in tips:

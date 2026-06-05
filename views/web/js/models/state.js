@@ -309,6 +309,12 @@ export class StateModel {
     if (m) {
       m.estado = 'completada';
       m.porcentaje_completado = 100;
+      
+      // Desbloquear la siguiente misión localmente para actualizar la UI
+      const siguiente = this.misiones.find(x => x.orden === m.orden + 1);
+      if (siguiente && siguiente.estado === 'bloqueada') {
+        siguiente.estado = 'disponible';
+      }
     }
     this.usuario.puntos_totales = resultado.puntos_totales;
     this.usuario.nivel          = resultado.nivel;
