@@ -112,8 +112,35 @@ export class StateModel {
     }
 
     if (!respuesta.ok) {
-      const error = await respuesta.json().catch(() => ({ detail: 'Error desconocido' }));
-      throw new Error(error.detail || `Error ${respuesta.status}`);
+      let mensajeError = `Error ${respuesta.status}`;
+      try {
+        const error = await respuesta.json();
+        const detail = error.detail;
+
+        if (typeof detail === 'string') {
+          // Caso común: detail es un string directo
+          mensajeError = detail;
+        } else if (Array.isArray(detail)) {
+          // Caso Pydantic 422: detail es un array de objetos de validación
+          // Extraer el primer mensaje legible
+          const primerError = detail[0];
+          if (primerError?.msg) {
+            // Limpiar el prefijo "Value error, " que añade Pydantic
+            mensajeError = primerError.msg.replace(/^Value error,\s*/i, '');
+          } else if (primerError?.message) {
+            mensajeError = primerError.message;
+          } else {
+            mensajeError = 'Datos inválidos. Revisa los campos e intenta de nuevo.';
+          }
+        } else if (detail && typeof detail === 'object') {
+          mensajeError = detail.message || detail.msg || JSON.stringify(detail);
+        } else if (error.message) {
+          mensajeError = error.message;
+        }
+      } catch (_) {
+        // respuesta no era JSON — mantener el mensaje genérico
+      }
+      throw new Error(mensajeError);
     }
 
     return respuesta.json();

@@ -5,8 +5,7 @@ Proyecto: Semiverd MVP
 
 from datetime import datetime
 from typing import Optional, List
-import re
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 # ─────────────────────────────────────────────────────────
@@ -16,7 +15,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 class UsuarioBase(BaseModel):
     nombre: str = Field(..., min_length=2, max_length=100, description="Nombre del guardián")
     apellido: Optional[str] = Field(None, max_length=100)
-    correo: EmailStr
+    correo: str = Field(..., description="Identificador único del usuario (correo o alias)")
     apodo: Optional[str] = Field(None, max_length=50, description="Nombre de guardián en el juego")
 
 
@@ -52,29 +51,24 @@ class UsuarioActualizar(BaseModel):
 # ─────────────────────────────────────────────────────────
 
 class LoginRequest(BaseModel):
-    correo: EmailStr
+    correo: str
     password: str
 
 
 class LoginFacialRequest(BaseModel):
     """Login con foto capturada. La imagen llega como base64"""
     imagen_base64: str = Field(..., description="Foto capturada en base64")
-    correo: Optional[str] = None      # Correo del usuario para vincular/registrar
+    correo: Optional[str] = Field(None, description="Correo o alias del usuario para vincular/registrar")
     nombre: Optional[str] = None      # Nombre para auto-registrar si no existe
 
     @field_validator('correo')
     @classmethod
-    def validar_formato_correo(cls, v):
-        """Rechaza correos con formato inválido antes de procesar el rostro."""
-        if v is None or v.strip() == '':
+    def normalizar_correo(cls, v):
+        """Limpia espacios; rechaza cadenas vacías o solo espacios."""
+        if v is None:
             return v
         v = v.strip()
-        patron = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-        if not re.match(patron, v):
-            raise ValueError(
-                f"'{v}' no es un correo válido. Ingresa una dirección como usuario@correo.com 📧"
-            )
-        return v.lower()
+        return v if v else None
 
 
 class TokenRespuesta(BaseModel):
