@@ -133,6 +133,8 @@ def obtener_encoding_facial(imagen_base64: str, num_jitters: int = 1) -> np.ndar
         )
 
 
+import re
+
 if getattr(sys, 'frozen', False):
     executable_dir = os.path.dirname(sys.executable)
     if sys.platform == 'darwin' and ".app/Contents/MacOS" in executable_dir:
@@ -144,6 +146,13 @@ if getattr(sys, 'frozen', False):
         FACES_DIR = os.path.join(executable_dir, "faces_db")
 else:
     FACES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "faces_db")
+
+
+def _es_correo_valido(correo: str) -> bool:
+    """Devuelve True si la cadena tiene formato de email válido."""
+    if not correo:
+        return False
+    return bool(re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', correo))
 
 
 def guardar_imagen_rostro_local(user_id: int, imagen_base64: str) -> str:
@@ -399,7 +408,25 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
 
         # Si no existe, auto-registrar con los datos proporcionados
         if not usuario:
-            # Evitar registrar una cara que ya pertenece a otro correo
+            # Evitar registrar una cara que ya pertenece a otro correo.
+            # Los usuarios con correo inválido (registros corruptos) se limpian automáticamente.
+            todos_usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
+
+            # Auto-limpiar registros con correo inválido (ej. alguien que escribió "SI")
+            for u in todos_usuarios:
+                if not _es_correo_valido(u.correo):
+                    print(f"[Semiverd] Limpiando usuario corrupto: id={u.id} correo='{u.correo}'")
+                    # Borrar archivos de rostro del disco
+                    user_dir = os.path.join(FACES_DIR, f"user_{u.id}")
+                    try:
+                        import shutil
+                        shutil.rmtree(user_dir, ignore_errors=True)
+                    except Exception:
+                        pass
+                    db.delete(u)
+            db.commit()
+
+            # Recargar lista limpia
             todos_usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
             for u in todos_usuarios:
                 if not u.face_encoding:

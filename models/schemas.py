@@ -5,7 +5,8 @@ Proyecto: Semiverd MVP
 
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+import re
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 # ─────────────────────────────────────────────────────────
@@ -60,6 +61,20 @@ class LoginFacialRequest(BaseModel):
     imagen_base64: str = Field(..., description="Foto capturada en base64")
     correo: Optional[str] = None      # Correo del usuario para vincular/registrar
     nombre: Optional[str] = None      # Nombre para auto-registrar si no existe
+
+    @field_validator('correo')
+    @classmethod
+    def validar_formato_correo(cls, v):
+        """Rechaza correos con formato inválido antes de procesar el rostro."""
+        if v is None or v.strip() == '':
+            return v
+        v = v.strip()
+        patron = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(patron, v):
+            raise ValueError(
+                f"'{v}' no es un correo válido. Ingresa una dirección como usuario@correo.com 📧"
+            )
+        return v.lower()
 
 
 class TokenRespuesta(BaseModel):
