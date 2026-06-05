@@ -5,7 +5,8 @@ Proyecto: Semiverd MVP
 
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
+import re
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 # ─────────────────────────────────────────────────────────
@@ -15,7 +16,7 @@ from pydantic import BaseModel, Field, field_validator
 class UsuarioBase(BaseModel):
     nombre: str = Field(..., min_length=2, max_length=100, description="Nombre del guardián")
     apellido: Optional[str] = Field(None, max_length=100)
-    correo: str = Field(..., description="Identificador único del usuario (correo o alias)")
+    correo: EmailStr = Field(..., description="Correo electrónico único del usuario")
     apodo: Optional[str] = Field(None, max_length=50, description="Nombre de guardián en el juego")
 
 
@@ -51,7 +52,7 @@ class UsuarioActualizar(BaseModel):
 # ─────────────────────────────────────────────────────────
 
 class LoginRequest(BaseModel):
-    correo: str
+    correo: EmailStr
     password: str
 
 
@@ -63,12 +64,17 @@ class LoginFacialRequest(BaseModel):
 
     @field_validator('correo')
     @classmethod
-    def normalizar_correo(cls, v):
-        """Limpia espacios; rechaza cadenas vacías o solo espacios."""
-        if v is None:
+    def validar_formato_correo(cls, v):
+        """Rechaza correos con formato inválido antes de procesar el rostro."""
+        if v is None or v.strip() == '':
             return v
         v = v.strip()
-        return v if v else None
+        patron = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+        if not re.match(patron, v):
+            raise ValueError(
+                f"'{v}' no es un correo válido. Ingresa una dirección como usuario@correo.com 📧"
+            )
+        return v.lower()
 
 
 class TokenRespuesta(BaseModel):

@@ -106,9 +106,12 @@ export class StateModel {
     const respuesta = await fetch(`${API_BASE}${ruta}`, opciones);
 
     if (respuesta.status === 401) {
-      this.cerrarSesion();
-      window.location.reload();
-      throw new Error("Sesión expirada. Por favor, ingresa de nuevo.");
+      // Si el 401 viene del login, no recargar la página (mostrar error en UI en vez de matar la sesión)
+      if (!ruta.includes('/auth/login')) {
+        this.cerrarSesion();
+        window.location.reload();
+        throw new Error("Sesión expirada. Por favor, ingresa de nuevo.");
+      }
     }
 
     if (!respuesta.ok) {

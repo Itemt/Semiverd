@@ -9,6 +9,7 @@ import os
 import sys
 import json
 from datetime import datetime, timedelta
+import re
 from typing import Optional, List
 
 import numpy as np
@@ -146,9 +147,11 @@ else:
     FACES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "faces_db")
 
 
-def _correo_es_vacio(correo) -> bool:
-    """Devuelve True si el correo es None o cadena vacía (registro corrupto)."""
-    return not correo or not str(correo).strip()
+def _es_correo_valido(correo: str) -> bool:
+    """Devuelve True si la cadena tiene formato de email válido."""
+    if not correo:
+        return False
+    return bool(re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', str(correo)))
 
 
 def guardar_imagen_rostro_local(user_id: int, imagen_base64: str) -> str:
@@ -405,12 +408,12 @@ def login_facial(datos: LoginFacialRequest, db: Session = Depends(get_db)):
         # Si no existe, auto-registrar con los datos proporcionados
         if not usuario:
             # Evitar registrar una cara que ya pertenece a otro correo.
-            # Los usuarios con correo vacío (registros corruptos) se limpian automáticamente.
+            # Los usuarios con correo inválido (registros corruptos, sin @) se limpian automáticamente.
             todos_usuarios = db.query(Usuario).filter(Usuario.activo == True).all()
 
-            # Auto-limpiar registros corruptos: correo None o vacío
+            # Auto-limpiar registros corruptos
             for u in todos_usuarios:
-                if _correo_es_vacio(u.correo):
+                if not _es_correo_valido(u.correo):
                     print(f"[Semiverd] Limpiando usuario corrupto: id={u.id} correo='{u.correo}'")
                     user_dir = os.path.join(FACES_DIR, f"user_{u.id}")
                     try:
