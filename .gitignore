@@ -32,3 +32,9 @@ faces_db/
 # PyInstaller build directories
 build/
 dist/
+
+# Local virtual environment
+.venv/
+
+# Local database
+semiverd.db
