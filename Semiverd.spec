@@ -42,10 +42,8 @@ windows_hidden_imports = [
     'win32con',
 ]
 
-# Hidden imports específicos de macOS (PostgreSQL)
-macos_hidden_imports = [
-    'psycopg2',  # Solo macOS: en Windows usamos SQLite
-]
+# Hidden imports específicos de macOS
+macos_hidden_imports = []
 
 if sys.platform == 'win32':
     platform_hidden_imports = windows_hidden_imports
@@ -63,7 +61,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['psycopg2'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
